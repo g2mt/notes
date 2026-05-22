@@ -27,8 +27,14 @@ public:
 
   void insertFromMimeData(const QMimeData *source) override;
 
+  const QString &filePath() const;
+  void setFilePath(const QString &path);
+
 signals:
   void formattingChanged();
+
+private:
+  QString m_filePath;
 };
 
 #endif // EDITOR_H

@@ -1,6 +1,7 @@
 #include "notes/EditorTabs.h"
 #include "notes/Editor.h"
 
+#include <QFile>
 #include <QIcon>
 #include <QTabBar>
 #include <QToolButton>
@@ -42,6 +43,14 @@ void EditorTabs::newDocument() {
 
 void EditorTabs::openDocument(const QString &filePath) {
   int index = addEditorTab(filePath.section(QLatin1Char('/'), -1));
+  auto *editor = qobject_cast<Editor *>(widget(index));
+  if (editor) {
+    editor->setFilePath(filePath);
+    QFile file(filePath);
+    if (file.open(QIODevice::ReadOnly))
+      editor->setMarkdown(QString::fromUtf8(file.readAll()));
+    editor->document()->setModified(false);
+  }
   setCurrentIndex(index);
 }
 
@@ -52,5 +61,18 @@ bool EditorTabs::saveDocument(const QString &filePath) {
 
 int EditorTabs::addEditorTab(const QString &title) {
   auto *editor = new Editor(this);
-  return addTab(editor, title.isEmpty() ? tr("Untitled") : title);
+  int index = addTab(editor, title.isEmpty() ? tr("Untitled") : title);
+
+  connect(editor->document(), &QTextDocument::modificationChanged, this,
+          [this, editor](bool modified) {
+            int idx = indexOf(editor);
+            if (idx < 0)
+              return;
+            QString path = editor->filePath();
+            auto base = path.isEmpty() ? tr("Untitled")
+                                       : path.section(QLatin1Char('/'), -1);
+            setTabText(idx, modified ? base + QStringLiteral(" *") : base);
+          });
+
+  return index;
 }

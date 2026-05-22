@@ -20,6 +20,10 @@ Editor::Editor(QWidget *parent) : QTextEdit(parent) {
 
 Editor::~Editor() = default;
 
+const QString &Editor::filePath() const { return m_filePath; }
+
+void Editor::setFilePath(const QString &path) { m_filePath = path; }
+
 void Editor::setBold(bool bold) {
   QTextCharFormat fmt;
   fmt.setFontWeight(bold ? QFont::Bold : QFont::Normal);
