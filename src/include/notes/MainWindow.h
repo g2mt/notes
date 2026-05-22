@@ -48,6 +48,9 @@ private:
   QAction *m_headingAction = nullptr;
   QAction *m_headingActions[6] = {};
   QMenu *m_headingMenu = nullptr;
+
+  QAction *m_orderedListAction = nullptr;
+  QAction *m_unorderedListAction = nullptr;
 };
 
 #endif // MAINWINDOW_H

@@ -20,6 +20,9 @@ public:
 
   void wrapHeading(int level);
 
+  void insertOrderedList();
+  void insertUnorderedList();
+
 signals:
   void formattingChanged();
 };

@@ -2,6 +2,7 @@
 
 #include <QTextCharFormat>
 #include <QTextCursor>
+#include <QTextListFormat>
 #include <QtGlobal>
 
 Editor::Editor(QWidget *parent) : QTextEdit(parent) {
@@ -48,4 +49,18 @@ void Editor::wrapHeading(int level) {
   QString tag = QStringLiteral("h%1").arg(level);
   cursor.insertHtml(QStringLiteral("<%1>%2</%1>")
                         .arg(tag, cursor.selectedText().toHtmlEscaped()));
+}
+
+void Editor::insertOrderedList() {
+  QTextCursor cursor = textCursor();
+  QTextListFormat fmt;
+  fmt.setStyle(QTextListFormat::ListDecimal);
+  cursor.insertList(fmt);
+}
+
+void Editor::insertUnorderedList() {
+  QTextCursor cursor = textCursor();
+  QTextListFormat fmt;
+  fmt.setStyle(QTextListFormat::ListDisc);
+  cursor.insertList(fmt);
 }

@@ -105,6 +105,20 @@ void MainWindow::setupActions() {
                                 tr("&Heading"), this);
   m_headingAction->setMenu(m_headingMenu);
 
+  m_unorderedListAction = new QAction(QIcon::fromTheme("format-list-unordered"),
+                                      tr("&Unordered List"), this);
+  connect(m_unorderedListAction, &QAction::triggered, this, [this]() {
+    if (auto *editor = m_editorTabs->currentEditor())
+      editor->insertUnorderedList();
+  });
+
+  m_orderedListAction = new QAction(QIcon::fromTheme("format-list-ordered"),
+                                    tr("&Ordered List"), this);
+  connect(m_orderedListAction, &QAction::triggered, this, [this]() {
+    if (auto *editor = m_editorTabs->currentEditor())
+      editor->insertOrderedList();
+  });
+
   connectEditorSignals(m_editorTabs->currentEditor());
   connect(m_editorTabs, &EditorTabs::currentEditorChanged, this,
           &MainWindow::connectEditorSignals);
@@ -151,6 +165,8 @@ void MainWindow::setupToolBar() {
 
   m_toolbar->addSeparator();
 
+  m_toolbar->addAction(m_unorderedListAction);
+  m_toolbar->addAction(m_orderedListAction);
   m_toolbar->addAction(m_headingAction);
 }
 
