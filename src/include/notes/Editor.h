@@ -1,15 +1,15 @@
-#ifndef TEXTEDITOR_H
-#define TEXTEDITOR_H
+#ifndef EDITOR_H
+#define EDITOR_H
 
 #include <QPlainTextEdit>
 
-class TextEditor : public QPlainTextEdit
+class Editor : public QPlainTextEdit
 {
     Q_OBJECT
 
 public:
-    explicit TextEditor(QWidget *parent = nullptr);
-    ~TextEditor();
+    explicit Editor(QWidget *parent = nullptr);
+    ~Editor();
 
     void setBold(bool bold);
     void setItalic(bool italic);
@@ -31,4 +31,4 @@ private:
     void mergeFormatOnSelection(const QTextCharFormat &format);
 };
 
-#endif // TEXTEDITOR_H
+#endif // EDITOR_H

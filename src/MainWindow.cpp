@@ -1,6 +1,6 @@
 #include "notes/MainWindow.h"
-#include "notes/TextEditor.h"
-#include "notes/DocumentManager.h"
+#include "notes/Editor.h"
+#include "notes/EditorTabs.h"
 
 #include <QAction>
 #include <QIcon>
@@ -10,10 +10,8 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
-    m_documentManager = new DocumentManager(this);
-
-    m_editor = new TextEditor(this);
-    setCentralWidget(m_editor);
+    m_editorTabs = new EditorTabs(this);
+    setCentralWidget(m_editorTabs);
 
     setupActions();
     setupToolBar();
@@ -48,16 +46,25 @@ void MainWindow::setupActions()
     m_underlineAction->setCheckable(true);
     m_underlineAction->setShortcut(QKeySequence::Underline);
 
-    connect(m_newAction, &QAction::triggered, m_documentManager, &DocumentManager::newDocument);
+    connect(m_newAction, &QAction::triggered, m_editorTabs, &EditorTabs::newDocument);
     connect(m_openAction, &QAction::triggered, this, [this]() {
-        m_documentManager->openDocument(QString());
+        m_editorTabs->openDocument(QString());
     });
     connect(m_saveAction, &QAction::triggered, this, [this]() {
-        m_documentManager->saveDocument(QString());
+        m_editorTabs->saveDocument(QString());
     });
-    connect(m_boldAction, &QAction::toggled, m_editor, &TextEditor::onBoldToggled);
-    connect(m_italicAction, &QAction::toggled, m_editor, &TextEditor::onItalicToggled);
-    connect(m_underlineAction, &QAction::toggled, m_editor, &TextEditor::onUnderlineToggled);
+    connect(m_boldAction, &QAction::toggled, this, [this](bool checked) {
+        if (auto *editor = m_editorTabs->currentEditor())
+            editor->onBoldToggled(checked);
+    });
+    connect(m_italicAction, &QAction::toggled, this, [this](bool checked) {
+        if (auto *editor = m_editorTabs->currentEditor())
+            editor->onItalicToggled(checked);
+    });
+    connect(m_underlineAction, &QAction::toggled, this, [this](bool checked) {
+        if (auto *editor = m_editorTabs->currentEditor())
+            editor->onUnderlineToggled(checked);
+    });
 }
 
 void MainWindow::setupToolBar()

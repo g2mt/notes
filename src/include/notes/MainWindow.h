@@ -5,8 +5,7 @@
 
 class QAction;
 class QToolBar;
-class TextEditor;
-class DocumentManager;
+class EditorTabs;
 
 class MainWindow : public QMainWindow
 {
@@ -21,8 +20,7 @@ private:
     void setupToolBar();
     void setupStatusBar();
 
-    TextEditor *m_editor = nullptr;
-    DocumentManager *m_documentManager = nullptr;
+    EditorTabs *m_editorTabs = nullptr;
     QToolBar *m_toolbar = nullptr;
     QAction *m_newAction = nullptr;
     QAction *m_openAction = nullptr;

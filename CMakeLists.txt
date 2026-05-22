@@ -13,13 +13,15 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 add_executable(wordpad
     src/main.cpp
     src/MainWindow.cpp
-    src/TextEditor.cpp
+    src/Editor.cpp
+    src/EditorTabs.cpp
     src/DocumentManager.cpp
 
     ### Contains Q_OBJECT macros, needed for automoc
     src/include/notes/DocumentManager.h
+    src/include/notes/Editor.h
+    src/include/notes/EditorTabs.h
     src/include/notes/MainWindow.h
-    src/include/notes/TextEditor.h
 )
 
 target_include_directories(wordpad PRIVATE src/include)
