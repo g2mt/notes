@@ -41,6 +41,11 @@ private:
   QAction *m_quitAction = nullptr;
   QAction *m_undoAction = nullptr;
   QAction *m_redoAction = nullptr;
+  QAction *m_cutAction = nullptr;
+  QAction *m_copyAction = nullptr;
+  QAction *m_pasteAction = nullptr;
+  QAction *m_pastePlainAction = nullptr;
+  QAction *m_deleteAction = nullptr;
   QAction *m_boldAction = nullptr;
   QAction *m_italicAction = nullptr;
   QAction *m_underlineAction = nullptr;

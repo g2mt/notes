@@ -5,6 +5,7 @@
 
 #include <QAction>
 #include <QApplication>
+#include <QClipboard>
 #include <QIcon>
 #include <QMenu>
 #include <QMenuBar>
@@ -119,6 +120,24 @@ void MainWindow::setupActions() {
       editor->insertOrderedList();
   });
 
+  m_cutAction = new QAction(QIcon::fromTheme("edit-cut"), tr("Cu&t"), this);
+  m_cutAction->setShortcut(QKeySequence::Cut);
+
+  m_copyAction = new QAction(QIcon::fromTheme("edit-copy"), tr("&Copy"), this);
+  m_copyAction->setShortcut(QKeySequence::Copy);
+
+  m_pasteAction =
+      new QAction(QIcon::fromTheme("edit-paste"), tr("&Paste"), this);
+  m_pasteAction->setShortcut(QKeySequence::Paste);
+
+  m_pastePlainAction = new QAction(tr("Paste as &plain text"), this);
+  m_pastePlainAction->setShortcut(
+      QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_V));
+
+  m_deleteAction =
+      new QAction(QIcon::fromTheme("edit-delete"), tr("&Delete"), this);
+  m_deleteAction->setShortcut(QKeySequence::Delete);
+
   connectEditorSignals(m_editorTabs->currentEditor());
   connect(m_editorTabs, &EditorTabs::currentEditorChanged, this,
           &MainWindow::connectEditorSignals);
@@ -135,6 +154,12 @@ void MainWindow::setupMenuBar() {
   m_editMenu = menuBar()->addMenu(tr("&Edit"));
   m_editMenu->addAction(m_undoAction);
   m_editMenu->addAction(m_redoAction);
+  m_editMenu->addSeparator();
+  m_editMenu->addAction(m_cutAction);
+  m_editMenu->addAction(m_copyAction);
+  m_editMenu->addAction(m_pasteAction);
+  m_editMenu->addAction(m_pastePlainAction);
+  m_editMenu->addAction(m_deleteAction);
   m_editMenu->addSeparator();
   m_editMenu->addAction(m_boldAction);
   m_editMenu->addAction(m_italicAction);
@@ -191,6 +216,11 @@ void MainWindow::connectEditorSignals(Editor *editor) {
     QObject::disconnect(m_redoAction, nullptr, m_previousEditor, nullptr);
     QObject::disconnect(m_previousEditor, nullptr, m_undoAction, nullptr);
     QObject::disconnect(m_previousEditor, nullptr, m_redoAction, nullptr);
+    QObject::disconnect(m_cutAction, nullptr, m_previousEditor, nullptr);
+    QObject::disconnect(m_copyAction, nullptr, m_previousEditor, nullptr);
+    QObject::disconnect(m_pasteAction, nullptr, m_previousEditor, nullptr);
+    QObject::disconnect(m_pastePlainAction, nullptr, m_previousEditor, nullptr);
+    QObject::disconnect(m_deleteAction, nullptr, m_previousEditor, nullptr);
   }
 
   m_previousEditor = editor;
@@ -202,6 +232,14 @@ void MainWindow::connectEditorSignals(Editor *editor) {
             &QAction::setEnabled);
     connect(m_undoAction, &QAction::triggered, editor, &QTextEdit::undo);
     connect(m_redoAction, &QAction::triggered, editor, &QTextEdit::redo);
+    connect(m_cutAction, &QAction::triggered, editor, &QTextEdit::cut);
+    connect(m_copyAction, &QAction::triggered, editor, &QTextEdit::copy);
+    connect(m_pasteAction, &QAction::triggered, editor, &QTextEdit::paste);
+    connect(m_pastePlainAction, &QAction::triggered, editor, [editor]() {
+      editor->insertPlainText(QApplication::clipboard()->text());
+    });
+    connect(m_deleteAction, &QAction::triggered, editor,
+            [editor]() { editor->textCursor().removeSelectedText(); });
     m_undoAction->setEnabled(editor->document()->isUndoAvailable());
     m_redoAction->setEnabled(editor->document()->isRedoAvailable());
   } else {

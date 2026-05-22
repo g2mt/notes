@@ -3,6 +3,8 @@
 
 #include <QTextEdit>
 
+class QMimeData;
+
 class Editor : public QTextEdit {
   Q_OBJECT
 
@@ -22,6 +24,8 @@ public:
 
   void insertOrderedList();
   void insertUnorderedList();
+
+  void insertFromMimeData(const QMimeData *source) override;
 
 signals:
   void formattingChanged();
