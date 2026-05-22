@@ -1,9 +1,9 @@
 #ifndef EDITOR_H
 #define EDITOR_H
 
-#include <QPlainTextEdit>
+#include <QTextEdit>
 
-class Editor : public QPlainTextEdit {
+class Editor : public QTextEdit {
   Q_OBJECT
 
 public:
@@ -18,16 +18,8 @@ public:
   bool isItalic() const;
   bool isUnderline() const;
 
-public slots:
-  void onBoldToggled(bool checked);
-  void onItalicToggled(bool checked);
-  void onUnderlineToggled(bool checked);
-
 signals:
   void formattingChanged();
-
-private:
-  void mergeFormatOnSelection(const QTextCharFormat &format);
 };
 
 #endif // EDITOR_H

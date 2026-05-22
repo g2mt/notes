@@ -12,7 +12,7 @@
 #include <QToolBar>
 
 #include <QCoreApplication>
-#include <QPlainTextEdit>
+#include <QTextEdit>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   m_editorTabs = new EditorTabs(this);
@@ -65,7 +65,7 @@ void MainWindow::setupActions() {
   m_boldAction->setShortcut(QKeySequence::Bold);
   connect(m_boldAction, &QAction::toggled, this, [this](bool checked) {
     if (auto *editor = m_editorTabs->currentEditor())
-      editor->onBoldToggled(checked);
+      editor->setBold(checked);
   });
 
   m_italicAction =
@@ -74,7 +74,7 @@ void MainWindow::setupActions() {
   m_italicAction->setShortcut(QKeySequence::Italic);
   connect(m_italicAction, &QAction::toggled, this, [this](bool checked) {
     if (auto *editor = m_editorTabs->currentEditor())
-      editor->onItalicToggled(checked);
+      editor->setItalic(checked);
   });
 
   m_underlineAction = new QAction(QIcon::fromTheme("format-text-underline"),
@@ -83,7 +83,7 @@ void MainWindow::setupActions() {
   m_underlineAction->setShortcut(QKeySequence::Underline);
   connect(m_underlineAction, &QAction::toggled, this, [this](bool checked) {
     if (auto *editor = m_editorTabs->currentEditor())
-      editor->onUnderlineToggled(checked);
+      editor->setUnderline(checked);
   });
 
   connectEditorSignals(m_editorTabs->currentEditor());
@@ -155,12 +155,12 @@ void MainWindow::connectEditorSignals(Editor *editor) {
   m_previousEditor = editor;
 
   if (editor) {
-    connect(editor, &QPlainTextEdit::undoAvailable, m_undoAction,
+    connect(editor, &QTextEdit::undoAvailable, m_undoAction,
             &QAction::setEnabled);
-    connect(editor, &QPlainTextEdit::redoAvailable, m_redoAction,
+    connect(editor, &QTextEdit::redoAvailable, m_redoAction,
             &QAction::setEnabled);
-    connect(m_undoAction, &QAction::triggered, editor, &QPlainTextEdit::undo);
-    connect(m_redoAction, &QAction::triggered, editor, &QPlainTextEdit::redo);
+    connect(m_undoAction, &QAction::triggered, editor, &QTextEdit::undo);
+    connect(m_redoAction, &QAction::triggered, editor, &QTextEdit::redo);
     m_undoAction->setEnabled(editor->document()->isUndoAvailable());
     m_redoAction->setEnabled(editor->document()->isRedoAvailable());
   } else {
