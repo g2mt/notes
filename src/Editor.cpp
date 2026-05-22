@@ -7,8 +7,6 @@
 #include <QTextDocument>
 #include <QTextListFormat>
 #include <QtGlobal>
-#include <md4c-html.h>
-#include <string>
 
 Editor::Editor(QWidget *parent) : QTextEdit(parent) {
   QFile css(QStringLiteral(":/templates/document.css"));
@@ -92,13 +90,7 @@ void Editor::insertFromMimeData(const QMimeData *source) {
     return;
   }
 
-  QByteArray mdBytes = markdown.toUtf8();
-  std::string data;
-  auto appendHtml = [](const MD_CHAR *text, MD_SIZE size, void *userdata) {
-    static_cast<std::string *>(userdata)->append(text, size);
-  };
-  md_html(mdBytes.constData(), mdBytes.size(), appendHtml, &data,
-          MD_DIALECT_GITHUB, 0);
-
-  textCursor().insertHtml(QString::fromUtf8(data));
+  QTextDocument doc;
+  doc.setMarkdown(markdown);
+  textCursor().insertHtml(doc.toHtml());
 }

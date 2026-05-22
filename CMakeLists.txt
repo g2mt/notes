@@ -10,9 +10,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 
-set(BUILD_MD2HTML_EXECUTABLE OFF CACHE BOOL "" FORCE)
-set(BUILD_SHARED_LIBS OFF)
-add_subdirectory(vendor/md4c)
 
 add_executable(wordpad
     src/resources.qrc
@@ -34,13 +31,10 @@ add_executable(wordpad
 
 target_include_directories(wordpad PRIVATE
     src/include
-    vendor/md4c/src
 )
 
 target_link_libraries(wordpad PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
-    md4c
-    md4c-html
 )
