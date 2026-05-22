@@ -6,6 +6,7 @@
 class QAction;
 class QMenu;
 class QToolBar;
+class Editor;
 class EditorTabs;
 
 class MainWindow : public QMainWindow {
@@ -19,8 +20,10 @@ private:
   void setupMenuBar();
   void setupToolBar();
   void setupStatusBar();
+  void connectEditorSignals(Editor *editor);
 
   EditorTabs *m_editorTabs = nullptr;
+  Editor *m_previousEditor = nullptr;
 
   QMenu *m_fileMenu = nullptr;
   QMenu *m_editMenu = nullptr;

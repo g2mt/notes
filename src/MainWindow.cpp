@@ -10,6 +10,7 @@
 #include <QToolBar>
 
 #include <QCoreApplication>
+#include <QPlainTextEdit>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   m_editorTabs = new EditorTabs(this);
@@ -49,9 +50,11 @@ void MainWindow::setupActions() {
 
   m_undoAction = new QAction(QIcon::fromTheme("edit-undo"), tr("&Undo"), this);
   m_undoAction->setShortcut(QKeySequence::Undo);
+  m_undoAction->setEnabled(false);
 
   m_redoAction = new QAction(QIcon::fromTheme("edit-redo"), tr("&Redo"), this);
   m_redoAction->setShortcut(QKeySequence::Redo);
+  m_redoAction->setEnabled(false);
 
   m_boldAction =
       new QAction(QIcon::fromTheme("format-text-bold"), tr("&Bold"), this);
@@ -79,6 +82,10 @@ void MainWindow::setupActions() {
     if (auto *editor = m_editorTabs->currentEditor())
       editor->onUnderlineToggled(checked);
   });
+
+  connectEditorSignals(m_editorTabs->currentEditor());
+  connect(m_editorTabs, &EditorTabs::currentEditorChanged, this,
+          &MainWindow::connectEditorSignals);
 }
 
 void MainWindow::setupMenuBar() {
@@ -120,3 +127,30 @@ void MainWindow::setupToolBar() {
 }
 
 void MainWindow::setupStatusBar() { statusBar()->showMessage(tr("Ready")); }
+
+void MainWindow::connectEditorSignals(Editor *editor) {
+  if (m_previousEditor) {
+    QObject::disconnect(m_undoAction, nullptr, m_previousEditor, nullptr);
+    QObject::disconnect(m_redoAction, nullptr, m_previousEditor, nullptr);
+    QObject::disconnect(m_previousEditor, nullptr, m_undoAction, nullptr);
+    QObject::disconnect(m_previousEditor, nullptr, m_redoAction, nullptr);
+  }
+
+  m_previousEditor = editor;
+
+  if (editor) {
+    connect(editor, &QPlainTextEdit::undoAvailable, m_undoAction,
+            &QAction::setEnabled);
+    connect(editor, &QPlainTextEdit::redoAvailable, m_redoAction,
+            &QAction::setEnabled);
+    connect(m_undoAction, &QAction::triggered, editor,
+            &QPlainTextEdit::undo);
+    connect(m_redoAction, &QAction::triggered, editor,
+            &QPlainTextEdit::redo);
+    m_undoAction->setEnabled(editor->document()->isUndoAvailable());
+    m_redoAction->setEnabled(editor->document()->isRedoAvailable());
+  } else {
+    m_undoAction->setEnabled(false);
+    m_redoAction->setEnabled(false);
+  }
+}

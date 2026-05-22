@@ -11,6 +11,11 @@ EditorTabs::EditorTabs(QWidget *parent) : QTabWidget(parent) {
   setDocumentMode(true);
   setupNewTabButton();
   newDocument();
+
+  connect(this, &QTabWidget::currentChanged, this, [this](int index) {
+    Q_UNUSED(index);
+    emit currentEditorChanged(currentEditor());
+  });
 }
 
 void EditorTabs::setupNewTabButton() {

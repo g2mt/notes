@@ -15,6 +15,9 @@ public:
 
   Editor *currentEditor() const;
 
+signals:
+  void currentEditorChanged(Editor *editor);
+
 public slots:
   void newDocument();
   void openDocument(const QString &filePath);
