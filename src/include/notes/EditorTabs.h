@@ -5,13 +5,13 @@
 #include <QTabWidget>
 
 class Editor;
+class QToolButton;
 
 class EditorTabs : public QTabWidget {
   Q_OBJECT
 
 public:
   explicit EditorTabs(QWidget *parent = nullptr);
-  ~EditorTabs();
 
   Editor *currentEditor() const;
 
@@ -21,7 +21,10 @@ public slots:
   bool saveDocument(const QString &filePath);
 
 private:
+  void setupNewTabButton();
   int addEditorTab(const QString &title = QString());
+
+  QToolButton *m_addTabButton = nullptr;
 };
 
 #endif // EDITORTABS_H

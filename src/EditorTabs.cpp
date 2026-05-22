@@ -1,12 +1,30 @@
 #include "notes/EditorTabs.h"
 #include "notes/Editor.h"
 
+#include <QIcon>
+#include <QTabBar>
+#include <QToolButton>
+
 EditorTabs::EditorTabs(QWidget *parent) : QTabWidget(parent) {
   setTabsClosable(true);
+  setMovable(true);
   setDocumentMode(true);
+  setupNewTabButton();
+  newDocument();
 }
 
-EditorTabs::~EditorTabs() = default;
+void EditorTabs::setupNewTabButton() {
+  auto *button = new QToolButton(this);
+  button->setIcon(QIcon::fromTheme("list-add"));
+  button->setToolTip(tr("Add new tab"));
+  button->setAutoRaise(true);
+
+  setCornerWidget(button, Qt::TopLeftCorner);
+
+  connect(button, &QToolButton::clicked, this, &EditorTabs::newDocument);
+
+  m_addTabButton = button;
+}
 
 Editor *EditorTabs::currentEditor() const {
   return qobject_cast<Editor *>(currentWidget());
