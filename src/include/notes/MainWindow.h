@@ -5,9 +5,11 @@
 
 class QAction;
 class QMenu;
+class QSplitter;
 class QToolBar;
 class Editor;
 class EditorTabs;
+class FileTree;
 
 class MainWindow : public QMainWindow {
   Q_OBJECT
@@ -20,8 +22,11 @@ private:
   void setupMenuBar();
   void setupToolBar();
   void setupStatusBar();
+  void setupSplitter();
   void connectEditorSignals(Editor *editor);
 
+  QSplitter *m_splitter = nullptr;
+  FileTree *m_fileTree = nullptr;
   EditorTabs *m_editorTabs = nullptr;
   Editor *m_previousEditor = nullptr;
 

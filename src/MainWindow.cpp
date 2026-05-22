@@ -1,11 +1,13 @@
 #include "notes/MainWindow.h"
 #include "notes/Editor.h"
 #include "notes/EditorTabs.h"
+#include "notes/FileTree.h"
 
 #include <QAction>
 #include <QApplication>
 #include <QIcon>
 #include <QMenuBar>
+#include <QSplitter>
 #include <QStatusBar>
 #include <QToolBar>
 
@@ -14,7 +16,8 @@
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   m_editorTabs = new EditorTabs(this);
-  setCentralWidget(m_editorTabs);
+
+  setupSplitter();
 
   setupActions();
   setupMenuBar();
@@ -128,6 +131,19 @@ void MainWindow::setupToolBar() {
 
 void MainWindow::setupStatusBar() { statusBar()->showMessage(tr("Ready")); }
 
+void MainWindow::setupSplitter() {
+  m_splitter = new QSplitter(Qt::Horizontal, this);
+  m_fileTree = new FileTree(m_splitter);
+  m_splitter->addWidget(m_fileTree);
+  m_splitter->addWidget(m_editorTabs);
+  m_splitter->setStretchFactor(0, 0);
+  m_splitter->setStretchFactor(1, 1);
+  setCentralWidget(m_splitter);
+
+  connect(m_fileTree, &FileTree::fileActivated, this,
+          [this](const QString &path) { m_editorTabs->openDocument(path); });
+}
+
 void MainWindow::connectEditorSignals(Editor *editor) {
   if (m_previousEditor) {
     QObject::disconnect(m_undoAction, nullptr, m_previousEditor, nullptr);
@@ -143,10 +159,8 @@ void MainWindow::connectEditorSignals(Editor *editor) {
             &QAction::setEnabled);
     connect(editor, &QPlainTextEdit::redoAvailable, m_redoAction,
             &QAction::setEnabled);
-    connect(m_undoAction, &QAction::triggered, editor,
-            &QPlainTextEdit::undo);
-    connect(m_redoAction, &QAction::triggered, editor,
-            &QPlainTextEdit::redo);
+    connect(m_undoAction, &QAction::triggered, editor, &QPlainTextEdit::undo);
+    connect(m_redoAction, &QAction::triggered, editor, &QPlainTextEdit::redo);
     m_undoAction->setEnabled(editor->document()->isUndoAvailable());
     m_redoAction->setEnabled(editor->document()->isRedoAvailable());
   } else {
