@@ -6,8 +6,8 @@
 #include <QAction>
 #include <QApplication>
 #include <QIcon>
-#include <QMenuBar>
 #include <QMenu>
+#include <QMenuBar>
 #include <QSplitter>
 #include <QStatusBar>
 #include <QToolBar>
@@ -91,8 +91,9 @@ void MainWindow::setupActions() {
   for (int i = 0; i < 6; ++i) {
     int level = i + 1;
     m_headingActions[i] =
-        new QAction(QStringLiteral("Heading %1").arg(level), this);
-    m_headingActions[i]->setShortcut(QKeySequence(QStringLiteral("Ctrl+%1").arg(level)));
+        new QAction(QStringLiteral("Heading &%1").arg(level), this);
+    m_headingActions[i]->setShortcut(
+        QKeySequence(QStringLiteral("Ctrl+%1").arg(level)));
     connect(m_headingActions[i], &QAction::triggered, this, [this, level]() {
       if (auto *editor = m_editorTabs->currentEditor())
         editor->wrapHeading(level);
