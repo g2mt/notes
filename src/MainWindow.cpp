@@ -6,6 +6,7 @@
 #include <QAction>
 #include <QApplication>
 #include <QClipboard>
+#include <QCloseEvent>
 #include <QIcon>
 #include <QMenu>
 #include <QMenuBar>
@@ -56,7 +57,8 @@ void MainWindow::setupActions() {
   m_quitAction =
       new QAction(QIcon::fromTheme("application-exit"), tr("&Quit"), this);
   m_quitAction->setShortcut(QKeySequence::Quit);
-  connect(m_quitAction, &QAction::triggered, qApp, &QApplication::quit);
+  connect(m_quitAction, &QAction::triggered, m_editorTabs,
+          &EditorTabs::closeAll);
 
   m_undoAction = new QAction(QIcon::fromTheme("edit-undo"), tr("&Undo"), this);
   m_undoAction->setShortcut(QKeySequence::Undo);
@@ -213,6 +215,11 @@ void MainWindow::setupSplitter() {
 
   connect(m_fileTree, &FileTree::fileActivated, this,
           [this](const QString &path) { m_editorTabs->openDocument(path); });
+}
+
+void MainWindow::closeEvent(QCloseEvent *event) {
+  if (m_editorTabs->closeAll())
+    event->ignore();
 }
 
 void MainWindow::connectEditorSignals(Editor *editor) {

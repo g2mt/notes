@@ -30,8 +30,11 @@ public:
   const QString &filePath() const;
   void setFilePath(const QString &path);
 
+  void close(bool canCancel = true);
+
 signals:
   void formattingChanged();
+  void closed();
 
 private:
   QString m_filePath;

@@ -23,12 +23,14 @@ public slots:
   void openDocument(const QString &filePath);
   bool saveDocument(const QString &filePath);
   void closeCurrentTab();
+  bool closeAll();
 
 private:
   void setupNewTabButton();
   int addEditorTab(const QString &title = QString());
 
   QToolButton *m_addTabButton = nullptr;
+  bool m_closingAll = false;
 };
 
 #endif // EDITORTABS_H

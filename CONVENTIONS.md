@@ -14,4 +14,5 @@
 
 ## Libraries
 
-- The md4c library is used to parse Markdown. Its source is available in `vendor/md4c/src`.
+- Qt 6 is used for this program.
+

@@ -1,6 +1,9 @@
 #include "notes/EditorTabs.h"
 #include "notes/Editor.h"
 
+#include <QApplication>
+#include <QCloseEvent>
+#include <QCoreApplication>
 #include <QFile>
 #include <QIcon>
 #include <QTabBar>
@@ -13,8 +16,11 @@ EditorTabs::EditorTabs(QWidget *parent) : QTabWidget(parent) {
   setupNewTabButton();
   newDocument();
 
-  connect(this, &QTabWidget::tabCloseRequested, this,
-          [this](int index) { removeTab(index); });
+  connect(this, &QTabWidget::tabCloseRequested, this, [this](int index) {
+    auto *editor = qobject_cast<Editor *>(widget(index));
+    if (editor)
+      editor->close();
+  });
 
   connect(this, &QTabWidget::currentChanged, this, [this](int index) {
     Q_UNUSED(index);
@@ -63,14 +69,35 @@ bool EditorTabs::saveDocument(const QString &filePath) {
 }
 
 void EditorTabs::closeCurrentTab() {
-  int index = currentIndex();
-  if (index >= 0)
-    removeTab(index);
+  auto *editor = currentEditor();
+  if (editor)
+    editor->close();
+}
+
+bool EditorTabs::closeAll() {
+  if (m_closingAll)
+    return false;
+  m_closingAll = true;
+  QList<Editor *> editors;
+  for (int i = 0; i < count(); ++i)
+    editors.append(qobject_cast<Editor *>(widget(i)));
+
+  for (auto *editor : editors)
+    editor->close(false);
+  return true;
 }
 
 int EditorTabs::addEditorTab(const QString &title) {
   auto *editor = new Editor(this);
   int index = addTab(editor, title.isEmpty() ? tr("Untitled") : title);
+
+  connect(editor, &Editor::closed, this, [this, editor]() {
+    int idx = indexOf(editor);
+    if (idx >= 0)
+      removeTab(idx);
+    if (m_closingAll && count() == 0)
+      qApp->quit();
+  });
 
   connect(editor->document(), &QTextDocument::modificationChanged, this,
           [this, editor](bool modified) {

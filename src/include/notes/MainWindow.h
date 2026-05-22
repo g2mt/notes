@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QCloseEvent>
 #include <QMainWindow>
 
 class QAction;
@@ -16,6 +17,9 @@ class MainWindow : public QMainWindow {
 
 public:
   explicit MainWindow(QWidget *parent = nullptr);
+
+protected:
+  void closeEvent(QCloseEvent *event) override;
 
 private:
   void setupActions();
