@@ -1,6 +1,8 @@
 #include "notes/Editor.h"
 
 #include <QTextCharFormat>
+#include <QTextCursor>
+#include <QtGlobal>
 
 Editor::Editor(QWidget *parent) : QTextEdit(parent) {
   connect(this, &QTextEdit::cursorPositionChanged, this,
@@ -33,12 +35,17 @@ bool Editor::isBold() const {
   return currentCharFormat().fontWeight() == QFont::Bold;
 }
 
-bool Editor::isItalic() const {
-  return currentCharFormat().fontItalic();
+bool Editor::isItalic() const { return currentCharFormat().fontItalic(); }
+
+bool Editor::isUnderline() const { return currentCharFormat().fontUnderline(); }
+
+void Editor::wrapHeading(int level) {
+  level = qBound(1, level, 6);
+
+  QTextCursor cursor = textCursor();
+  cursor.movePosition(QTextCursor::StartOfBlock);
+  cursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
+  QString tag = QStringLiteral("h%1").arg(level);
+  cursor.insertHtml(QStringLiteral("<%1>%2</%1>")
+                        .arg(tag, cursor.selectedText().toHtmlEscaped()));
 }
-
-bool Editor::isUnderline() const {
-  return currentCharFormat().fontUnderline();
-}
-
-

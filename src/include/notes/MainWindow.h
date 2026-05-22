@@ -44,6 +44,10 @@ private:
   QAction *m_boldAction = nullptr;
   QAction *m_italicAction = nullptr;
   QAction *m_underlineAction = nullptr;
+
+  QAction *m_headingAction = nullptr;
+  QAction *m_headingActions[6] = {};
+  QMenu *m_headingMenu = nullptr;
 };
 
 #endif // MAINWINDOW_H

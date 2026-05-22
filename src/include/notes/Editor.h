@@ -18,6 +18,8 @@ public:
   bool isItalic() const;
   bool isUnderline() const;
 
+  void wrapHeading(int level);
+
 signals:
   void formattingChanged();
 };

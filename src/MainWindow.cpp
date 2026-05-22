@@ -7,6 +7,7 @@
 #include <QApplication>
 #include <QIcon>
 #include <QMenuBar>
+#include <QMenu>
 #include <QSplitter>
 #include <QStatusBar>
 #include <QToolBar>
@@ -86,6 +87,23 @@ void MainWindow::setupActions() {
       editor->setUnderline(checked);
   });
 
+  m_headingMenu = new QMenu(tr("&Heading"), this);
+  for (int i = 0; i < 6; ++i) {
+    int level = i + 1;
+    m_headingActions[i] =
+        new QAction(QStringLiteral("Heading %1").arg(level), this);
+    m_headingActions[i]->setShortcut(QKeySequence(QStringLiteral("Ctrl+%1").arg(level)));
+    connect(m_headingActions[i], &QAction::triggered, this, [this, level]() {
+      if (auto *editor = m_editorTabs->currentEditor())
+        editor->wrapHeading(level);
+    });
+    m_headingMenu->addAction(m_headingActions[i]);
+  }
+
+  m_headingAction = new QAction(QIcon::fromTheme("format-text-heading"),
+                                tr("&Heading"), this);
+  m_headingAction->setMenu(m_headingMenu);
+
   connectEditorSignals(m_editorTabs->currentEditor());
   connect(m_editorTabs, &EditorTabs::currentEditorChanged, this,
           &MainWindow::connectEditorSignals);
@@ -106,6 +124,8 @@ void MainWindow::setupMenuBar() {
   m_editMenu->addAction(m_boldAction);
   m_editMenu->addAction(m_italicAction);
   m_editMenu->addAction(m_underlineAction);
+  m_editMenu->addSeparator();
+  m_editMenu->addMenu(m_headingMenu);
 
   m_viewMenu = menuBar()->addMenu(tr("&View"));
 }
@@ -127,6 +147,10 @@ void MainWindow::setupToolBar() {
   m_toolbar->addAction(m_boldAction);
   m_toolbar->addAction(m_italicAction);
   m_toolbar->addAction(m_underlineAction);
+
+  m_toolbar->addSeparator();
+
+  m_toolbar->addAction(m_headingAction);
 }
 
 void MainWindow::setupStatusBar() { statusBar()->showMessage(tr("Ready")); }
