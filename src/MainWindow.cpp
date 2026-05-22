@@ -48,6 +48,11 @@ void MainWindow::setupActions() {
   connect(m_saveAction, &QAction::triggered, this,
           [this]() { m_editorTabs->saveDocument(QString()); });
 
+  m_closeTabAction = new QAction(tr("&Close Tab"), this);
+  m_closeTabAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_W));
+  connect(m_closeTabAction, &QAction::triggered, m_editorTabs,
+          &EditorTabs::closeCurrentTab);
+
   m_quitAction =
       new QAction(QIcon::fromTheme("application-exit"), tr("&Quit"), this);
   m_quitAction->setShortcut(QKeySequence::Quit);

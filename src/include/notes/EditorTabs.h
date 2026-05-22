@@ -22,6 +22,7 @@ public slots:
   void newDocument();
   void openDocument(const QString &filePath);
   bool saveDocument(const QString &filePath);
+  void closeCurrentTab();
 
 private:
   void setupNewTabButton();

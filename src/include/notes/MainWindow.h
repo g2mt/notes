@@ -56,6 +56,7 @@ private:
 
   QAction *m_orderedListAction = nullptr;
   QAction *m_unorderedListAction = nullptr;
+  QAction *m_closeTabAction = nullptr;
 };
 
 #endif // MAINWINDOW_H

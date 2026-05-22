@@ -13,6 +13,9 @@ EditorTabs::EditorTabs(QWidget *parent) : QTabWidget(parent) {
   setupNewTabButton();
   newDocument();
 
+  connect(this, &QTabWidget::tabCloseRequested, this,
+          [this](int index) { removeTab(index); });
+
   connect(this, &QTabWidget::currentChanged, this, [this](int index) {
     Q_UNUSED(index);
     emit currentEditorChanged(currentEditor());
@@ -59,6 +62,12 @@ bool EditorTabs::saveDocument(const QString &filePath) {
   return true;
 }
 
+void EditorTabs::closeCurrentTab() {
+  int index = currentIndex();
+  if (index >= 0)
+    removeTab(index);
+}
+
 int EditorTabs::addEditorTab(const QString &title) {
   auto *editor = new Editor(this);
   int index = addTab(editor, title.isEmpty() ? tr("Untitled") : title);
@@ -71,7 +80,7 @@ int EditorTabs::addEditorTab(const QString &title) {
             QString path = editor->filePath();
             auto base = path.isEmpty() ? tr("Untitled")
                                        : path.section(QLatin1Char('/'), -1);
-            setTabText(idx, modified ? base + QStringLiteral(" *") : base);
+            setTabText(idx, modified ? base + QStringLiteral("*") : base);
           });
 
   return index;
