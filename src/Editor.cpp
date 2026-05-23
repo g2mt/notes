@@ -55,12 +55,12 @@ void Editor::close(bool canCancel) {
   msgBox->setWindowTitle(tr("Unsaved Changes"));
   msgBox->setText(tr("The document has been modified."));
   msgBox->setInformativeText(tr("Do you want to save your changes?"));
-  auto *saveBtn = msgBox->addButton(tr("Save"), QMessageBox::AcceptRole);
-  auto *saveAsBtn = msgBox->addButton(tr("Save as"), QMessageBox::AcceptRole);
+  auto *saveBtn = msgBox->addButton(tr("&Save"), QMessageBox::AcceptRole);
+  auto *saveAsBtn = msgBox->addButton(tr("Save &as"), QMessageBox::AcceptRole);
   auto *discardBtn =
-      msgBox->addButton(tr("Discard"), QMessageBox::DestructiveRole);
+      msgBox->addButton(tr("&Discard"), QMessageBox::DestructiveRole);
   if (canCancel)
-    msgBox->addButton(tr("Cancel"), QMessageBox::RejectRole);
+    msgBox->addButton(tr("&Cancel"), QMessageBox::RejectRole);
   msgBox->setDefaultButton(saveBtn);
   msgBox->setIcon(QMessageBox::Question);
   msgBox->setAttribute(Qt::WA_DeleteOnClose);
