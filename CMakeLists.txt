@@ -20,6 +20,7 @@ add_executable(notes
     src/EditorTabs.cpp
     src/DocumentManager.cpp
     src/FileTree.cpp
+    src/SideBar.cpp
     src/TablePopup.cpp
 
     ### Contains Q_OBJECT macros, needed for automoc
@@ -28,6 +29,7 @@ add_executable(notes
     src/include/notes/EditorTabs.h
     src/include/notes/FileTree.h
     src/include/notes/MainWindow.h
+    src/include/notes/SideBar.h
     src/include/notes/TablePopup.h
 )
 

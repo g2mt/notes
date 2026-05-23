@@ -12,13 +12,12 @@ class FileTree : public QTreeWidget {
 public:
   explicit FileTree(QWidget *parent = nullptr);
 
-  void refresh();
+  void populate(const QDir &dir);
 
 signals:
   void fileActivated(const QString &filePath);
 
 private:
-  void populate();
   void addDirectory(const QDir &dir, QTreeWidgetItem *parent);
 };
 

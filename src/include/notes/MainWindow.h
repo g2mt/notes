@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QCloseEvent>
+#include <QDir>
 #include <QList>
 #include <QMainWindow>
 #include <QMetaObject>
@@ -12,7 +13,7 @@ class QSplitter;
 class QToolBar;
 class Editor;
 class EditorTabs;
-class FileTree;
+class SideBar;
 class TablePopup;
 
 class MainWindow : public QMainWindow {
@@ -20,6 +21,12 @@ class MainWindow : public QMainWindow {
 
 public:
   explicit MainWindow(QWidget *parent = nullptr);
+
+  const QDir &workDir() const;
+  void setWorkDir(const QDir &dir);
+
+signals:
+  void workDirChanged(const QDir &dir);
 
 protected:
   void closeEvent(QCloseEvent *event) override;
@@ -32,8 +39,9 @@ private:
   void setupSplitter();
   void connectEditorSignals(Editor *editor);
 
+  QDir m_workDir;
   QSplitter *m_splitter = nullptr;
-  FileTree *m_fileTree = nullptr;
+  SideBar *m_sidebar = nullptr;
   EditorTabs *m_editorTabs = nullptr;
   struct {
     Editor *e = nullptr;

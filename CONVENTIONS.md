@@ -19,5 +19,5 @@
 
 ## UI
 
-- Menu actions have to be in title-case. Capitalize the first level of every content word.
+- Menu actions, buttons have to be in title-case. Capitalize the first level of every content word.
 

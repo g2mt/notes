@@ -2,6 +2,7 @@
 #include "notes/Editor.h"
 #include "notes/EditorTabs.h"
 #include "notes/FileTree.h"
+#include "notes/SideBar.h"
 #include "notes/TablePopup.h"
 
 #include <QAction>
@@ -22,7 +23,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   m_editorTabs = new EditorTabs(this);
 
   setupSplitter();
-
+  setWorkDir(QDir("."));
   setupActions();
   setupMenuBar();
   setupToolBar();
@@ -132,8 +133,7 @@ void MainWindow::setupActions() {
 
   m_headingMenu = new QMenu(tr("&Heading"), this);
 
-  m_normalTextAction =
-      new QAction(tr("&Normal Text"), this);
+  m_normalTextAction = new QAction(tr("&Normal Text"), this);
   m_normalTextAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_0));
   connect(m_normalTextAction, &QAction::triggered, this, [this]() {
     if (auto *editor = m_editorTabs->currentEditor())
@@ -278,15 +278,17 @@ void MainWindow::setupStatusBar() { statusBar()->showMessage(tr("Ready")); }
 
 void MainWindow::setupSplitter() {
   m_splitter = new QSplitter(Qt::Horizontal, this);
-  m_fileTree = new FileTree(m_splitter);
-  m_splitter->addWidget(m_fileTree);
+  m_sidebar = new SideBar(m_splitter);
+  m_splitter->addWidget(m_sidebar);
   m_splitter->addWidget(m_editorTabs);
   m_splitter->setStretchFactor(0, 0);
   m_splitter->setStretchFactor(1, 1);
   setCentralWidget(m_splitter);
 
-  connect(m_fileTree, &FileTree::fileActivated, this,
+  connect(m_sidebar->fileTree(), &FileTree::fileActivated, this,
           [this](const QString &path) { m_editorTabs->openDocument(path); });
+  connect(this, &MainWindow::workDirChanged, this,
+          [this](const QDir &dir) { m_sidebar->fileTree()->populate(dir); });
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
@@ -347,4 +349,13 @@ void MainWindow::connectEditorSignals(Editor *editor) {
     m_undoAction->setEnabled(false);
     m_redoAction->setEnabled(false);
   }
+}
+
+const QDir &MainWindow::workDir() const { return m_workDir; }
+
+void MainWindow::setWorkDir(const QDir &dir) {
+  if (m_workDir == dir)
+    return;
+  m_workDir = dir;
+  emit workDirChanged(dir);
 }

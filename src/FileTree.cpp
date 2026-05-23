@@ -17,17 +17,12 @@ FileTree::FileTree(QWidget *parent) : QTreeWidget(parent) {
               emit fileActivated(path);
           });
 
-  refresh();
+  populate(QDir("."));
 }
 
-void FileTree::refresh() {
+void FileTree::populate(const QDir &dir) {
   clear();
-  populate();
-}
-
-void FileTree::populate() {
   QFileIconProvider iconProvider;
-  QDir dir(".");
 
   addDirectory(dir, nullptr);
 }
