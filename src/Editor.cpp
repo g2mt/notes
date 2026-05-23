@@ -23,6 +23,28 @@ Editor::Editor(QWidget *parent) : QTextEdit(parent) {
 
 Editor::~Editor() = default;
 
+bool Editor::save(const QString *path) {
+  QString p;
+  if (!path || path->isEmpty()) {
+    p = QFileDialog::getSaveFileName(this, tr("Save As"),
+                                     path ? QString() : m_filePath);
+    if (p.isEmpty())
+      return false;
+  } else {
+    p = *path;
+  }
+
+  QFile file(p);
+  if (file.open(QIODevice::WriteOnly)) {
+    file.write(toMarkdown().toUtf8());
+    file.close();
+    m_filePath = p;
+    document()->setModified(false);
+    return true;
+  }
+  return false;
+}
+
 void Editor::close(bool canCancel) {
   if (!document()->isModified()) {
     emit closed();
@@ -34,8 +56,7 @@ void Editor::close(bool canCancel) {
   msgBox->setText(tr("The document has been modified."));
   msgBox->setInformativeText(tr("Do you want to save your changes?"));
   auto *saveBtn = msgBox->addButton(tr("Save"), QMessageBox::AcceptRole);
-  auto *saveAsBtn =
-      msgBox->addButton(tr("Save As..."), QMessageBox::AcceptRole);
+  auto *saveAsBtn = msgBox->addButton(tr("Save as"), QMessageBox::AcceptRole);
   auto *discardBtn =
       msgBox->addButton(tr("Discard"), QMessageBox::DestructiveRole);
   if (canCancel)
@@ -49,26 +70,13 @@ void Editor::close(bool canCancel) {
             auto *clicked = msgBox->clickedButton();
 
             if (clicked == saveBtn || clicked == saveAsBtn) {
-              QString path = m_filePath;
-              if (clicked == saveAsBtn || path.isEmpty()) {
-                path = QFileDialog::getSaveFileName(this, tr("Save As"), path);
-              }
-              if (!path.isEmpty()) {
-                QFile file(path);
-                if (file.open(QIODevice::WriteOnly)) {
-                  file.write(toMarkdown().toUtf8());
-                  file.close();
-                  m_filePath = path;
-                  document()->setModified(false);
-                }
-              }
-              if (canCancel && path.isEmpty())
-                return;
-            } else if (clicked != discardBtn) {
-              return; // Cancel
+              if (save(clicked == saveAsBtn ? nullptr : &m_filePath))
+                emit closed();
+              else if (!canCancel)
+                emit closed();
+            } else if (clicked == discardBtn) {
+              emit closed();
             }
-
-            emit closed();
           });
 
   msgBox->open();

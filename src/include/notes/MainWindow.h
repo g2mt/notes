@@ -47,6 +47,7 @@ private:
   QAction *m_newAction = nullptr;
   QAction *m_openAction = nullptr;
   QAction *m_saveAction = nullptr;
+  QAction *m_saveAsAction = nullptr;
   QAction *m_quitAction = nullptr;
   QAction *m_undoAction = nullptr;
   QAction *m_redoAction = nullptr;

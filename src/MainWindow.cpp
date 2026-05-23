@@ -46,8 +46,18 @@ void MainWindow::setupActions() {
   m_saveAction =
       new QAction(QIcon::fromTheme("document-save"), tr("&Save"), this);
   m_saveAction->setShortcut(QKeySequence::Save);
-  connect(m_saveAction, &QAction::triggered, this,
-          [this]() { m_editorTabs->saveDocument(QString()); });
+  connect(m_saveAction, &QAction::triggered, this, [this]() {
+    if (auto *editor = m_editorTabs->currentEditor())
+      editor->save(&editor->filePath());
+  });
+
+  m_saveAsAction =
+      new QAction(QIcon::fromTheme("document-save-as"), tr("Save &As"), this);
+  m_saveAsAction->setShortcut(QKeySequence::SaveAs);
+  connect(m_saveAsAction, &QAction::triggered, this, [this]() {
+    if (auto *editor = m_editorTabs->currentEditor())
+      editor->save(nullptr);
+  });
 
   m_closeTabAction = new QAction(tr("&Close Tab"), this);
   m_closeTabAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_W));
@@ -155,6 +165,7 @@ void MainWindow::setupMenuBar() {
   m_fileMenu->addAction(m_newAction);
   m_fileMenu->addAction(m_openAction);
   m_fileMenu->addAction(m_saveAction);
+  m_fileMenu->addAction(m_saveAsAction);
   m_fileMenu->addSeparator();
   m_fileMenu->addAction(m_closeTabAction);
   m_fileMenu->addAction(m_quitAction);
@@ -221,6 +232,8 @@ void MainWindow::setupSplitter() {
 void MainWindow::closeEvent(QCloseEvent *event) {
   if (m_editorTabs->closeAll())
     event->ignore();
+  else
+    event->accept();
 }
 
 void MainWindow::connectEditorSignals(Editor *editor) {
@@ -232,6 +245,16 @@ void MainWindow::connectEditorSignals(Editor *editor) {
   m_editor.e = editor;
 
   if (editor) {
+    // File menu
+    m_editor.connections.append(
+        connect(editor, &QObject::destroyed, this, [this]() {
+          m_saveAction->setEnabled(false);
+          m_saveAsAction->setEnabled(false);
+        }));
+    m_saveAction->setEnabled(true);
+    m_saveAsAction->setEnabled(true);
+
+    // Edit menu
     m_editor.connections.append(connect(editor, &QTextEdit::undoAvailable,
                                         m_undoAction, &QAction::setEnabled));
     m_editor.connections.append(connect(editor, &QTextEdit::redoAvailable,
@@ -256,6 +279,11 @@ void MainWindow::connectEditorSignals(Editor *editor) {
     m_undoAction->setEnabled(editor->document()->isUndoAvailable());
     m_redoAction->setEnabled(editor->document()->isRedoAvailable());
   } else {
+    // File
+    m_saveAction->setEnabled(false);
+    m_saveAsAction->setEnabled(false);
+
+    // Edit
     m_undoAction->setEnabled(false);
     m_redoAction->setEnabled(false);
   }

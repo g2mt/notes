@@ -63,11 +63,6 @@ void EditorTabs::openDocument(const QString &filePath) {
   setCurrentIndex(index);
 }
 
-bool EditorTabs::saveDocument(const QString &filePath) {
-  Q_UNUSED(filePath);
-  return true;
-}
-
 void EditorTabs::closeCurrentTab() {
   auto *editor = currentEditor();
   if (editor)
