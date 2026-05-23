@@ -51,6 +51,7 @@ void SideBar::setSelectedFolder(const QString &dir) {
   int idx = findDirInCombo(m_folderCombo, dir);
   if (idx == -1) {
     idx = m_folderCombo->count();
+    QSignalBlocker blocker(m_folderCombo);
     m_folderCombo->addItem(QDir(dir).dirName());
     m_folderCombo->setItemData(idx, dir, Qt::UserRole);
   }
