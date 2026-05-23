@@ -53,6 +53,15 @@ void EditorTabs::newDocument() {
 
 void EditorTabs::openDocument(const QString &filePath) {
   int index;
+  // Reuse empty untitled tab instead of stacking another
+  if (count() == 1) {
+    auto *first = qobject_cast<Editor *>(widget(0));
+    if (first && first->filePath().isEmpty() && !first->document()->isModified() &&
+        first->document()->isEmpty()) {
+      removeTab(0);
+    }
+  }
+
   auto *editor = addEditorTab(filePath.section(QLatin1Char('/'), -1), index);
   if (editor) {
     editor->setFilePath(filePath);
