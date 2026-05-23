@@ -9,6 +9,7 @@
   3. Event handlers (optional, prefer lambdas)
   4. Signals (in headers)
 - Store header files in `src/include/notes`
+- Wrap any operation with multiple insertion/deletion calls in `QTextCursor::beginEditBlock()` / `endEditBlock()` to keep undo steps atomic
 
 - When commiting, do not add anything to the message body. Instead, summarize what the commit does within only the commit title. Use the conventional commit format for the title: `type: description`.
 
