@@ -2,11 +2,10 @@
 #define FILETREE_H
 
 #include <QDir>
-#include <QTreeWidget>
+#include <QFileSystemModel>
+#include <QTreeView>
 
-class QTreeWidgetItem;
-
-class FileTree : public QTreeWidget {
+class FileTree : public QTreeView {
   Q_OBJECT
 
 public:
@@ -18,7 +17,7 @@ signals:
   void fileActivated(const QString &filePath);
 
 private:
-  void addDirectory(const QDir &dir, QTreeWidgetItem *parent);
+  QFileSystemModel *m_model;
 };
 
 #endif // FILETREE_H

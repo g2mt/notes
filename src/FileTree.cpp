@@ -1,51 +1,24 @@
 #include "notes/FileTree.h"
 
-#include <QDir>
-#include <QFileIconProvider>
-#include <QFileInfo>
-#include <QTreeWidgetItem>
+FileTree::FileTree(QWidget *parent) : QTreeView(parent) {
+  m_model = new QFileSystemModel(this);
+  m_model->setRootPath(QDir::currentPath());
 
-FileTree::FileTree(QWidget *parent) : QTreeWidget(parent) {
-  setHeaderHidden(true);
+  setModel(m_model);
+  setRootIndex(m_model->index(QDir::currentPath()));
 
-  connect(this, &QTreeWidget::itemDoubleClicked, this,
-          [this](QTreeWidgetItem *item, int) {
-            if (!item)
+  connect(this, &QTreeView::doubleClicked, this,
+          [this](const QModelIndex &index) {
+            if (!index.isValid())
               return;
-            const auto path = item->data(0, Qt::UserRole).toString();
+            const auto path = m_model->filePath(index);
             if (!path.isEmpty())
               emit fileActivated(path);
           });
-
-  populate(QDir("."));
 }
 
 void FileTree::populate(const QDir &dir) {
-  clear();
-  QFileIconProvider iconProvider;
-
-  addDirectory(dir, nullptr);
-}
-
-void FileTree::addDirectory(const QDir &dir, QTreeWidgetItem *parent) {
-  QFileIconProvider iconProvider;
-
-  const auto entries =
-      dir.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot,
-                        QDir::DirsFirst | QDir::Name);
-
-  for (const auto &entry : entries) {
-    QTreeWidgetItem *item;
-    if (parent)
-      item = new QTreeWidgetItem(parent);
-    else
-      item = new QTreeWidgetItem(this);
-
-    item->setIcon(0, iconProvider.icon(entry));
-    item->setText(0, entry.fileName());
-    item->setData(0, Qt::UserRole, entry.absoluteFilePath());
-
-    if (entry.isDir())
-      addDirectory(QDir(entry.absoluteFilePath()), item);
-  }
+  const auto path = dir.absolutePath();
+  m_model->setRootPath(path);
+  setRootIndex(m_model->index(path));
 }
