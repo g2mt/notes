@@ -34,7 +34,10 @@ private:
   QSplitter *m_splitter = nullptr;
   FileTree *m_fileTree = nullptr;
   EditorTabs *m_editorTabs = nullptr;
-  struct { Editor *e = nullptr; QList<QMetaObject::Connection> connections; } m_editor;
+  struct {
+    Editor *e = nullptr;
+    QList<QMetaObject::Connection> connections;
+  } m_editor;
 
   QMenu *m_fileMenu = nullptr;
   QMenu *m_editMenu = nullptr;

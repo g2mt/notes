@@ -34,39 +34,42 @@ void Editor::close(bool canCancel) {
   msgBox->setText(tr("The document has been modified."));
   msgBox->setInformativeText(tr("Do you want to save your changes?"));
   auto *saveBtn = msgBox->addButton(tr("Save"), QMessageBox::AcceptRole);
-  auto *saveAsBtn = msgBox->addButton(tr("Save As..."), QMessageBox::AcceptRole);
-  auto *discardBtn = msgBox->addButton(tr("Discard"), QMessageBox::DestructiveRole);
+  auto *saveAsBtn =
+      msgBox->addButton(tr("Save As..."), QMessageBox::AcceptRole);
+  auto *discardBtn =
+      msgBox->addButton(tr("Discard"), QMessageBox::DestructiveRole);
   if (canCancel)
     msgBox->addButton(tr("Cancel"), QMessageBox::RejectRole);
   msgBox->setDefaultButton(saveBtn);
   msgBox->setIcon(QMessageBox::Question);
   msgBox->setAttribute(Qt::WA_DeleteOnClose);
 
-  connect(msgBox, &QMessageBox::finished, this, [this, msgBox, saveBtn, saveAsBtn, discardBtn, canCancel](int) {
-    auto *clicked = msgBox->clickedButton();
+  connect(msgBox, &QMessageBox::finished, this,
+          [this, msgBox, saveBtn, saveAsBtn, discardBtn, canCancel](int) {
+            auto *clicked = msgBox->clickedButton();
 
-    if (clicked == saveBtn || clicked == saveAsBtn) {
-      QString path = m_filePath;
-      if (clicked == saveAsBtn || path.isEmpty()) {
-        path = QFileDialog::getSaveFileName(this, tr("Save As"), path);
-      }
-      if (!path.isEmpty()) {
-        QFile file(path);
-        if (file.open(QIODevice::WriteOnly)) {
-          file.write(toMarkdown().toUtf8());
-          file.close();
-          m_filePath = path;
-          document()->setModified(false);
-        }
-      }
-      if (canCancel && path.isEmpty())
-        return;
-    } else if (clicked != discardBtn) {
-      return; // Cancel
-    }
+            if (clicked == saveBtn || clicked == saveAsBtn) {
+              QString path = m_filePath;
+              if (clicked == saveAsBtn || path.isEmpty()) {
+                path = QFileDialog::getSaveFileName(this, tr("Save As"), path);
+              }
+              if (!path.isEmpty()) {
+                QFile file(path);
+                if (file.open(QIODevice::WriteOnly)) {
+                  file.write(toMarkdown().toUtf8());
+                  file.close();
+                  m_filePath = path;
+                  document()->setModified(false);
+                }
+              }
+              if (canCancel && path.isEmpty())
+                return;
+            } else if (clicked != discardBtn) {
+              return; // Cancel
+            }
 
-    emit closed();
-  });
+            emit closed();
+          });
 
   msgBox->open();
 }
