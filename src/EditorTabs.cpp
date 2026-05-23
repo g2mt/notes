@@ -56,8 +56,8 @@ void EditorTabs::openDocument(const QString &filePath) {
   // Reuse empty untitled tab instead of stacking another
   if (count() == 1) {
     auto *first = qobject_cast<Editor *>(widget(0));
-    if (first && first->filePath().isEmpty() && !first->document()->isModified() &&
-        first->document()->isEmpty()) {
+    if (first && first->filePath().isEmpty() &&
+        !first->document()->isModified() && first->document()->isEmpty()) {
       removeTab(0);
     }
   }
@@ -102,8 +102,12 @@ Editor *EditorTabs::addEditorTab(const QString &title, int &index) {
     int idx = indexOf(editor);
     if (idx >= 0)
       removeTab(idx);
-    if (m_closingAll && count() == 0)
-      qApp->quit();
+    if (count() == 0) {
+      if (m_closingAll)
+        qApp->quit();
+      else
+        newDocument();
+    }
   });
 
   connect(editor->document(), &QTextDocument::modificationChanged, this,
