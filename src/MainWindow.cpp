@@ -223,35 +223,37 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 }
 
 void MainWindow::connectEditorSignals(Editor *editor) {
-  if (m_previousEditor) {
-    QObject::disconnect(m_undoAction, nullptr, m_previousEditor, nullptr);
-    QObject::disconnect(m_redoAction, nullptr, m_previousEditor, nullptr);
-    QObject::disconnect(m_previousEditor, nullptr, m_undoAction, nullptr);
-    QObject::disconnect(m_previousEditor, nullptr, m_redoAction, nullptr);
-    QObject::disconnect(m_cutAction, nullptr, m_previousEditor, nullptr);
-    QObject::disconnect(m_copyAction, nullptr, m_previousEditor, nullptr);
-    QObject::disconnect(m_pasteAction, nullptr, m_previousEditor, nullptr);
-    QObject::disconnect(m_pastePlainAction, nullptr, m_previousEditor, nullptr);
-    QObject::disconnect(m_deleteAction, nullptr, m_previousEditor, nullptr);
+  foreach (auto var, m_editor.connections) {
+    QObject::disconnect(var);
   }
+  m_editor.connections.clear();
 
-  m_previousEditor = editor;
+  m_editor.e = editor;
 
   if (editor) {
-    connect(editor, &QTextEdit::undoAvailable, m_undoAction,
-            &QAction::setEnabled);
-    connect(editor, &QTextEdit::redoAvailable, m_redoAction,
-            &QAction::setEnabled);
-    connect(m_undoAction, &QAction::triggered, editor, &QTextEdit::undo);
-    connect(m_redoAction, &QAction::triggered, editor, &QTextEdit::redo);
-    connect(m_cutAction, &QAction::triggered, editor, &QTextEdit::cut);
-    connect(m_copyAction, &QAction::triggered, editor, &QTextEdit::copy);
-    connect(m_pasteAction, &QAction::triggered, editor, &QTextEdit::paste);
-    connect(m_pastePlainAction, &QAction::triggered, editor, [editor]() {
-      editor->insertPlainText(QApplication::clipboard()->text());
-    });
-    connect(m_deleteAction, &QAction::triggered, editor,
-            [editor]() { editor->textCursor().removeSelectedText(); });
+    m_editor.connections.append(
+        connect(editor, &QTextEdit::undoAvailable, m_undoAction,
+                &QAction::setEnabled));
+    m_editor.connections.append(
+        connect(editor, &QTextEdit::redoAvailable, m_redoAction,
+                &QAction::setEnabled));
+    m_editor.connections.append(
+        connect(m_undoAction, &QAction::triggered, editor, &QTextEdit::undo));
+    m_editor.connections.append(
+        connect(m_redoAction, &QAction::triggered, editor, &QTextEdit::redo));
+    m_editor.connections.append(
+        connect(m_cutAction, &QAction::triggered, editor, &QTextEdit::cut));
+    m_editor.connections.append(
+        connect(m_copyAction, &QAction::triggered, editor, &QTextEdit::copy));
+    m_editor.connections.append(
+        connect(m_pasteAction, &QAction::triggered, editor, &QTextEdit::paste));
+    m_editor.connections.append(connect(
+        m_pastePlainAction, &QAction::triggered, editor, [editor]() {
+          editor->insertPlainText(QApplication::clipboard()->text());
+        }));
+    m_editor.connections.append(connect(
+        m_deleteAction, &QAction::triggered, editor,
+        [editor]() { editor->textCursor().removeSelectedText(); }));
     m_undoAction->setEnabled(editor->document()->isUndoAvailable());
     m_redoAction->setEnabled(editor->document()->isRedoAvailable());
   } else {

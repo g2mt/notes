@@ -2,7 +2,9 @@
 #define MAINWINDOW_H
 
 #include <QCloseEvent>
+#include <QList>
 #include <QMainWindow>
+#include <QMetaObject>
 
 class QAction;
 class QMenu;
@@ -32,7 +34,7 @@ private:
   QSplitter *m_splitter = nullptr;
   FileTree *m_fileTree = nullptr;
   EditorTabs *m_editorTabs = nullptr;
-  Editor *m_previousEditor = nullptr;
+  struct { Editor *e = nullptr; QList<QMetaObject::Connection> connections; } m_editor;
 
   QMenu *m_fileMenu = nullptr;
   QMenu *m_editMenu = nullptr;
