@@ -45,9 +45,7 @@ SideBar::SideBar(QWidget *parent) : QWidget(parent) {
   layout->addLayout(bottomBar);
 }
 
-FileTree *SideBar::fileTree() const {
-  return m_fileTree;
-}
+FileTree *SideBar::fileTree() const { return m_fileTree; }
 
 void SideBar::setSelectedFolder(const QString &dir) {
   int idx = findDirInCombo(m_folderCombo, dir);
@@ -70,5 +68,6 @@ void SideBar::onOpenFolder() {
 void SideBar::onFolderSelected(int index) {
   if (index < 0)
     return;
-  m_fileTree->populate(QDir(m_folderCombo->itemData(index, Qt::UserRole).toString()));
+  m_fileTree->populate(
+      QDir(m_folderCombo->itemData(index, Qt::UserRole).toString()));
 }

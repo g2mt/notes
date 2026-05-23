@@ -23,7 +23,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   m_editorTabs = new EditorTabs(this);
 
   setupSplitter();
-  setWorkDir(QDir("."));
   setupActions();
   setupMenuBar();
   setupToolBar();
@@ -31,6 +30,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
   setWindowTitle(tr("notes"));
   resize(800, 600);
+  emit workDirChanged(m_workDir);
 }
 
 void MainWindow::setupActions() {
@@ -287,8 +287,10 @@ void MainWindow::setupSplitter() {
 
   connect(m_sidebar->fileTree(), &FileTree::fileActivated, this,
           [this](const QString &path) { m_editorTabs->openDocument(path); });
-  connect(this, &MainWindow::workDirChanged, this,
-          [this](const QDir &dir) { m_sidebar->fileTree()->populate(dir); });
+  connect(this, &MainWindow::workDirChanged, this, [this](const QDir &dir) {
+    m_sidebar->fileTree()->populate(dir);
+    m_sidebar->setSelectedFolder(dir.absolutePath());
+  });
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
