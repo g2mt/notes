@@ -46,13 +46,14 @@ Editor *EditorTabs::currentEditor() const {
 }
 
 void EditorTabs::newDocument() {
-  int index = addEditorTab(tr("Untitled"));
+  int index;
+  addEditorTab(tr("Untitled"), index);
   setCurrentIndex(index);
 }
 
 void EditorTabs::openDocument(const QString &filePath) {
-  int index = addEditorTab(filePath.section(QLatin1Char('/'), -1));
-  auto *editor = qobject_cast<Editor *>(widget(index));
+  int index;
+  auto *editor = addEditorTab(filePath.section(QLatin1Char('/'), -1), index);
   if (editor) {
     editor->setFilePath(filePath);
     QFile file(filePath);
@@ -84,9 +85,9 @@ bool EditorTabs::closeAll() {
   return true;
 }
 
-int EditorTabs::addEditorTab(const QString &title) {
+Editor *EditorTabs::addEditorTab(const QString &title, int &index) {
   auto *editor = new Editor(this);
-  int index = addTab(editor, title.isEmpty() ? tr("Untitled") : title);
+  index = addTab(editor, title.isEmpty() ? tr("Untitled") : title);
 
   connect(editor, &Editor::closed, this, [this, editor]() {
     int idx = indexOf(editor);
@@ -107,5 +108,5 @@ int EditorTabs::addEditorTab(const QString &title) {
             setTabText(idx, modified ? base + QStringLiteral("*") : base);
           });
 
-  return index;
+  return editor;
 }

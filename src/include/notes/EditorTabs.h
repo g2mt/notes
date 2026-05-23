@@ -26,7 +26,7 @@ public slots:
 
 private:
   void setupNewTabButton();
-  int addEditorTab(const QString &title = QString());
+  Editor *addEditorTab(const QString &title, int &index);
 
   QToolButton *m_addTabButton = nullptr;
   bool m_closingAll = false;
