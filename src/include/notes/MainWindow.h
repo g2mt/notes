@@ -65,6 +65,7 @@ private:
   QAction *m_subscriptAction = nullptr;
 
   QAction *m_headingAction = nullptr;
+  QAction *m_normalTextAction = nullptr;
   QAction *m_headingActions[6] = {};
   QMenu *m_headingMenu = nullptr;
 

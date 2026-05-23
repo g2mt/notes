@@ -24,6 +24,7 @@ public:
   bool isUnderline() const;
 
   void wrapHeading(int level);
+  void clearHeading();
 
   void insertOrderedList();
   void insertUnorderedList();

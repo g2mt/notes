@@ -5,9 +5,11 @@
 #include <QMessageBox>
 #include <QMimeData>
 #include <QPushButton>
+#include <QRegularExpression>
 #include <QTextCharFormat>
 #include <QTextCursor>
 #include <QTextDocument>
+#include <QTextDocumentFragment>
 #include <QTextListFormat>
 #include <QtGlobal>
 
@@ -132,15 +134,43 @@ bool Editor::isItalic() const { return currentCharFormat().fontItalic(); }
 
 bool Editor::isUnderline() const { return currentCharFormat().fontUnderline(); }
 
+static QString stripHeadingMarkdown(const QTextDocumentFragment &fragment) {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 4, 0)
+  QString md = fragment.toMarkdown().replace("\n", " ").trimmed();
+#else
+  QTextDocument doc;
+  doc.setHtml(fragment.toHtml());
+  QString md = doc.toMarkdown().trimmed();
+#endif
+
+  static const QRegularExpression headingRe(QStringLiteral("^#+\\s*"));
+  md.remove(headingRe);
+  return md;
+}
+
 void Editor::wrapHeading(int level) {
   level = qBound(1, level, 6);
 
   QTextCursor cursor = textCursor();
   cursor.movePosition(QTextCursor::StartOfBlock);
   cursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
-  QString tag = QStringLiteral("h%1").arg(level);
-  cursor.insertHtml(QStringLiteral("<%1>%2</%1>")
-                        .arg(tag, cursor.selectedText().toHtmlEscaped()));
+  if (cursor.currentTable() != nullptr || cursor.currentList() != nullptr)
+    return;
+
+  QString md = stripHeadingMarkdown(QTextDocumentFragment(cursor));
+  md = QStringLiteral("#").repeated(level) + QStringLiteral(" ") + md;
+  cursor.insertMarkdown(md);
+}
+
+void Editor::clearHeading() {
+  QTextCursor cursor = textCursor();
+  cursor.movePosition(QTextCursor::StartOfBlock);
+  cursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
+  if (cursor.currentTable() != nullptr || cursor.currentList() != nullptr)
+    return;
+
+  QString md = stripHeadingMarkdown(QTextDocumentFragment(cursor));
+  cursor.insertMarkdown(md);
 }
 
 void Editor::insertOrderedList() {

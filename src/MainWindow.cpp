@@ -131,6 +131,17 @@ void MainWindow::setupActions() {
   });
 
   m_headingMenu = new QMenu(tr("&Heading"), this);
+
+  m_normalTextAction =
+      new QAction(tr("&Normal Text"), this);
+  m_normalTextAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_0));
+  connect(m_normalTextAction, &QAction::triggered, this, [this]() {
+    if (auto *editor = m_editorTabs->currentEditor())
+      editor->clearHeading();
+  });
+  m_headingMenu->addAction(m_normalTextAction);
+  m_headingMenu->addSeparator();
+
   for (int i = 0; i < 6; ++i) {
     int level = i + 1;
     m_headingActions[i] =
