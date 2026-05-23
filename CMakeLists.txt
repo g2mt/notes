@@ -20,6 +20,7 @@ add_executable(wordpad
     src/EditorTabs.cpp
     src/DocumentManager.cpp
     src/FileTree.cpp
+    src/TablePopup.cpp
 
     ### Contains Q_OBJECT macros, needed for automoc
     src/include/notes/DocumentManager.h
@@ -27,6 +28,7 @@ add_executable(wordpad
     src/include/notes/EditorTabs.h
     src/include/notes/FileTree.h
     src/include/notes/MainWindow.h
+    src/include/notes/TablePopup.h
 )
 
 target_include_directories(wordpad PRIVATE

@@ -2,6 +2,7 @@
 #include "notes/Editor.h"
 #include "notes/EditorTabs.h"
 #include "notes/FileTree.h"
+#include "notes/TablePopup.h"
 
 #include <QAction>
 #include <QApplication>
@@ -129,6 +130,20 @@ void MainWindow::setupActions() {
       editor->insertUnorderedList();
   });
 
+  m_tableAction =
+      new QAction(QIcon::fromTheme("insert-table"), tr("&Table"), this);
+  connect(m_tableAction, &QAction::triggered, this, [this]() {
+    auto *editor = m_editorTabs->currentEditor();
+    if (!editor)
+      return;
+
+    auto *popup = new TablePopup(this);
+    if (auto *btn = m_toolbar->widgetForAction(m_tableAction))
+      popup->move(btn->mapToGlobal(QPoint(0, btn->height())));
+    connect(popup, &TablePopup::accepted, editor, &Editor::insertTable);
+    popup->show();
+  });
+
   m_orderedListAction = new QAction(QIcon::fromTheme("format-list-ordered"),
                                     tr("&Ordered List"), this);
   connect(m_orderedListAction, &QAction::triggered, this, [this]() {
@@ -211,6 +226,10 @@ void MainWindow::setupToolBar() {
   m_toolbar->addAction(m_unorderedListAction);
   m_toolbar->addAction(m_orderedListAction);
   m_toolbar->addAction(m_headingAction);
+
+  m_toolbar->addSeparator();
+
+  m_toolbar->addAction(m_tableAction);
 }
 
 void MainWindow::setupStatusBar() { statusBar()->showMessage(tr("Ready")); }

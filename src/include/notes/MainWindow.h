@@ -13,6 +13,7 @@ class QToolBar;
 class Editor;
 class EditorTabs;
 class FileTree;
+class TablePopup;
 
 class MainWindow : public QMainWindow {
   Q_OBJECT
@@ -66,6 +67,7 @@ private:
 
   QAction *m_orderedListAction = nullptr;
   QAction *m_unorderedListAction = nullptr;
+  QAction *m_tableAction = nullptr;
   QAction *m_closeTabAction = nullptr;
 };
 

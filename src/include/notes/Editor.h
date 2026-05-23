@@ -25,6 +25,8 @@ public:
   void insertOrderedList();
   void insertUnorderedList();
 
+  void insertTable(int rows, int cols);
+
   void insertFromMimeData(const QMimeData *source) override;
 
   const QString &filePath() const;

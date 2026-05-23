@@ -137,6 +137,34 @@ void Editor::insertUnorderedList() {
   cursor.insertList(fmt);
 }
 
+void Editor::insertTable(int rows, int cols) {
+  QTextCursor cursor = textCursor();
+  QString html;
+  html += QStringLiteral("<table>");
+
+  // Header row
+  html += QStringLiteral("<thead><tr>");
+  for (int c = 0; c < cols; ++c)
+    html += QStringLiteral("<th></th>");
+  html += QStringLiteral("</tr></thead>");
+
+  // Body rows
+  if (rows > 1) {
+    html += QStringLiteral("<tbody>");
+    for (int r = 1; r < rows; ++r) {
+      html += QStringLiteral("<tr>");
+      for (int c = 0; c < cols; ++c)
+        html += QStringLiteral("<td></td>");
+      html += QStringLiteral("</tr>");
+    }
+    html += QStringLiteral("</tbody>");
+  }
+
+  html += QStringLiteral("</table>");
+
+  cursor.insertHtml(html);
+}
+
 void Editor::insertFromMimeData(const QMimeData *source) {
   if (!source) {
     QTextEdit::insertFromMimeData(nullptr);
