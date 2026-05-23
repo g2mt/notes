@@ -60,6 +60,9 @@ private:
   QAction *m_boldAction = nullptr;
   QAction *m_italicAction = nullptr;
   QAction *m_underlineAction = nullptr;
+  QAction *m_strikethroughAction = nullptr;
+  QAction *m_superscriptAction = nullptr;
+  QAction *m_subscriptAction = nullptr;
 
   QAction *m_headingAction = nullptr;
   QAction *m_headingActions[6] = {};

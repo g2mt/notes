@@ -104,6 +104,26 @@ void Editor::setUnderline(bool underline) {
   mergeCurrentCharFormat(fmt);
 }
 
+void Editor::setStrikethrough(bool strike) {
+  QTextCharFormat fmt;
+  fmt.setFontStrikeOut(strike);
+  mergeCurrentCharFormat(fmt);
+}
+
+void Editor::setSuperscript(bool super) {
+  QTextCharFormat fmt;
+  fmt.setVerticalAlignment(super ? QTextCharFormat::AlignSuperScript
+                                 : QTextCharFormat::AlignNormal);
+  mergeCurrentCharFormat(fmt);
+}
+
+void Editor::setSubscript(bool sub) {
+  QTextCharFormat fmt;
+  fmt.setVerticalAlignment(sub ? QTextCharFormat::AlignSubScript
+                               : QTextCharFormat::AlignNormal);
+  mergeCurrentCharFormat(fmt);
+}
+
 bool Editor::isBold() const {
   return currentCharFormat().fontWeight() == QFont::Bold;
 }

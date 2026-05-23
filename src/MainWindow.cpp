@@ -105,6 +105,31 @@ void MainWindow::setupActions() {
       editor->setUnderline(checked);
   });
 
+  m_strikethroughAction =
+      new QAction(QIcon::fromTheme("format-text-strikethrough"),
+                  tr("&Strikethrough"), this);
+  m_strikethroughAction->setCheckable(true);
+  connect(m_strikethroughAction, &QAction::toggled, this, [this](bool checked) {
+    if (auto *editor = m_editorTabs->currentEditor())
+      editor->setStrikethrough(checked);
+  });
+
+  m_superscriptAction = new QAction(QIcon::fromTheme("format-text-superscript"),
+                                    tr("&Superscript"), this);
+  m_superscriptAction->setCheckable(true);
+  connect(m_superscriptAction, &QAction::toggled, this, [this](bool checked) {
+    if (auto *editor = m_editorTabs->currentEditor())
+      editor->setSuperscript(checked);
+  });
+
+  m_subscriptAction = new QAction(QIcon::fromTheme("format-text-subscript"),
+                                  tr("&Subscript"), this);
+  m_subscriptAction->setCheckable(true);
+  connect(m_subscriptAction, &QAction::toggled, this, [this](bool checked) {
+    if (auto *editor = m_editorTabs->currentEditor())
+      editor->setSubscript(checked);
+  });
+
   m_headingMenu = new QMenu(tr("&Heading"), this);
   for (int i = 0; i < 6; ++i) {
     int level = i + 1;
@@ -197,6 +222,9 @@ void MainWindow::setupMenuBar() {
   m_editMenu->addAction(m_boldAction);
   m_editMenu->addAction(m_italicAction);
   m_editMenu->addAction(m_underlineAction);
+  m_editMenu->addAction(m_strikethroughAction);
+  m_editMenu->addAction(m_superscriptAction);
+  m_editMenu->addAction(m_subscriptAction);
   m_editMenu->addSeparator();
   m_editMenu->addMenu(m_headingMenu);
 
@@ -220,6 +248,9 @@ void MainWindow::setupToolBar() {
   m_toolbar->addAction(m_boldAction);
   m_toolbar->addAction(m_italicAction);
   m_toolbar->addAction(m_underlineAction);
+  m_toolbar->addAction(m_strikethroughAction);
+  m_toolbar->addAction(m_superscriptAction);
+  m_toolbar->addAction(m_subscriptAction);
 
   m_toolbar->addSeparator();
 

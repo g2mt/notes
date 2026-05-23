@@ -15,6 +15,9 @@ public:
   void setBold(bool bold);
   void setItalic(bool italic);
   void setUnderline(bool underline);
+  void setStrikethrough(bool strike);
+  void setSuperscript(bool super);
+  void setSubscript(bool sub);
 
   bool isBold() const;
   bool isItalic() const;
