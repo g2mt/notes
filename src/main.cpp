@@ -3,8 +3,9 @@
 
 int main(int argc, char *argv[]) {
   QApplication app(argc, argv);
-  app.setApplicationName("Wordpad");
-  app.setApplicationVersion("1.0.0");
+  app.setApplicationName("notes");
+  app.setOrganizationName("QtNotes");
+  app.setApplicationName("Notes");
 
   MainWindow window;
   window.show();

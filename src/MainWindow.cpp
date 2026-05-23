@@ -28,7 +28,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   setupToolBar();
   setupStatusBar();
 
-  setWindowTitle(tr("Wordpad"));
+  setWindowTitle(tr("notes"));
   resize(800, 600);
 }
 
