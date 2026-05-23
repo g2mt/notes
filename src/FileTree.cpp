@@ -17,8 +17,7 @@ FileTree::FileTree(QWidget *parent) : QTreeView(parent) {
           });
 }
 
-void FileTree::populate(const QDir &dir) {
-  const auto path = dir.absolutePath();
+void FileTree::populate(const QString &path) {
   m_model->setRootPath(path);
   setRootIndex(m_model->index(path));
 }

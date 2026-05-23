@@ -1,7 +1,6 @@
 #ifndef FILETREE_H
 #define FILETREE_H
 
-#include <QDir>
 #include <QFileSystemModel>
 #include <QTreeView>
 
@@ -11,7 +10,7 @@ class FileTree : public QTreeView {
 public:
   explicit FileTree(QWidget *parent = nullptr);
 
-  void populate(const QDir &dir);
+  void populate(const QString &path);
 
 signals:
   void fileActivated(const QString &filePath);

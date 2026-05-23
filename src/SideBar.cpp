@@ -68,6 +68,5 @@ void SideBar::onOpenFolder() {
 void SideBar::onFolderSelected(int index) {
   if (index < 0)
     return;
-  m_fileTree->populate(
-      QDir(m_folderCombo->itemData(index, Qt::UserRole).toString()));
+  m_fileTree->populate(m_folderCombo->itemData(index, Qt::UserRole).toString());
 }

@@ -288,8 +288,9 @@ void MainWindow::setupSplitter() {
   connect(m_sidebar->fileTree(), &FileTree::fileActivated, this,
           [this](const QString &path) { m_editorTabs->openDocument(path); });
   connect(this, &MainWindow::workDirChanged, this, [this](const QDir &dir) {
-    m_sidebar->fileTree()->populate(dir);
-    m_sidebar->setSelectedFolder(dir.absolutePath());
+    QString path = dir.absolutePath();
+    m_sidebar->fileTree()->populate(path);
+    m_sidebar->setSelectedFolder(path);
   });
 }
 
