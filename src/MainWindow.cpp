@@ -67,8 +67,7 @@ void MainWindow::setupActions() {
   m_quitAction =
       new QAction(QIcon::fromTheme("application-exit"), tr("&Quit"), this);
   m_quitAction->setShortcut(QKeySequence::Quit);
-  connect(m_quitAction, &QAction::triggered, m_editorTabs,
-          &EditorTabs::closeAll);
+  connect(m_quitAction, &QAction::triggered, this, &MainWindow::close);
 
   m_undoAction = new QAction(QIcon::fromTheme("edit-undo"), tr("&Undo"), this);
   m_undoAction->setShortcut(QKeySequence::Undo);
