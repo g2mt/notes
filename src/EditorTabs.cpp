@@ -75,6 +75,8 @@ void EditorTabs::closeCurrentTab() {
 }
 
 bool EditorTabs::closeAll() {
+  if (count() == 0)
+    return false;
   if (m_closingAll)
     return false;
   m_closingAll = true;

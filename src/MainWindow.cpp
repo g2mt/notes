@@ -137,7 +137,7 @@ void MainWindow::setupActions() {
       new QAction(QIcon::fromTheme("edit-paste"), tr("&Paste"), this);
   m_pasteAction->setShortcut(QKeySequence::Paste);
 
-  m_pastePlainAction = new QAction(tr("Paste as &plain text"), this);
+  m_pastePlainAction = new QAction(tr("Paste as Plain &Text"), this);
   m_pastePlainAction->setShortcut(
       QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_V));
 
@@ -156,6 +156,7 @@ void MainWindow::setupMenuBar() {
   m_fileMenu->addAction(m_openAction);
   m_fileMenu->addAction(m_saveAction);
   m_fileMenu->addSeparator();
+  m_fileMenu->addAction(m_closeTabAction);
   m_fileMenu->addAction(m_quitAction);
 
   m_editMenu = menuBar()->addMenu(tr("&Edit"));

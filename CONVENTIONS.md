@@ -16,3 +16,7 @@
 
 - Qt 6 is used for this program.
 
+## UI
+
+- Menu actions have to be in title-case. Capitalize the first level of every content word.
+
