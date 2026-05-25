@@ -42,23 +42,22 @@ bool Editor::save(const QString &path) {
     QDateTime mod = fi.lastModified();
     qint64 size = fi.size();
     if (mod != m_fileLastModified || size != m_fileSize) {
-      auto *msgBox = new QMessageBox(this);
-      msgBox->setWindowTitle(tr("File Changed"));
-      msgBox->setText(tr("The file has been modified outside the editor."));
-      msgBox->setInformativeText(
+      QMessageBox msgBox(this);
+      msgBox.setWindowTitle(tr("File Changed"));
+      msgBox.setText(tr("The file has been modified outside the editor."));
+      msgBox.setInformativeText(
           tr("Do you want to overwrite it, save elsewhere, or discard?"));
       auto *overwriteBtn =
-          msgBox->addButton(tr("&Overwrite"), QMessageBox::AcceptRole);
+          msgBox.addButton(tr("&Overwrite"), QMessageBox::AcceptRole);
       auto *saveAsBtn =
-          msgBox->addButton(tr("Save &as"), QMessageBox::AcceptRole);
+          msgBox.addButton(tr("Save &as"), QMessageBox::AcceptRole);
       auto *discardBtn =
-          msgBox->addButton(tr("&Discard"), QMessageBox::DestructiveRole);
-      msgBox->setDefaultButton(overwriteBtn);
-      msgBox->setIcon(QMessageBox::Warning);
-      msgBox->setAttribute(Qt::WA_DeleteOnClose);
+          msgBox.addButton(tr("&Discard"), QMessageBox::DestructiveRole);
+      msgBox.setDefaultButton(overwriteBtn);
+      msgBox.setIcon(QMessageBox::Warning);
 
-      msgBox->exec();
-      auto *clicked = msgBox->clickedButton();
+      msgBox.exec();
+      auto *clicked = msgBox.clickedButton();
 
       if (clicked == saveAsBtn) {
         p = QFileDialog::getSaveFileName(this, tr("Save File as"), m_filePath);
