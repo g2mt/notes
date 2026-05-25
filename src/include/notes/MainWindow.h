@@ -21,7 +21,8 @@ class MainWindow : public QMainWindow {
   Q_OBJECT
 
 public:
-  explicit MainWindow(QWidget *parent = nullptr);
+  explicit MainWindow(const QString &dirPath = QString(),
+                 QWidget *parent = nullptr);
 
   const QDir &workDir() const;
   void setWorkDir(const QDir &dir);

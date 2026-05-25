@@ -19,7 +19,9 @@
 #include <QTextEdit>
 #include <QToolBar>
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
+MainWindow::MainWindow(const QString &dirPath, QWidget *parent)
+    : QMainWindow(parent) {
+  m_workDir = dirPath.isEmpty() ? QDir::current() : QDir(dirPath);
   m_editorTabs = new EditorTabs(this);
 
   setupSplitter();
