@@ -52,7 +52,7 @@ void MainWindow::setupActions() {
   m_saveAction->setShortcut(QKeySequence::Save);
   connect(m_saveAction, &QAction::triggered, this, [this]() {
     if (auto *editor = m_editorTabs->currentEditor())
-      editor->save(&editor->filePath());
+      editor->save(editor->filePath());
   });
 
   m_saveAsAction =

@@ -36,7 +36,7 @@ public:
   const QString &filePath() const;
   void setFilePath(const QString &path);
 
-  bool save(const QString *path = nullptr);
+  bool save(const QString &path = QString());
   void close(bool canCancel = true);
 
 signals:

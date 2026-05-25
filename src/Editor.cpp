@@ -25,15 +25,14 @@ Editor::Editor(QWidget *parent) : QTextEdit(parent) {
 
 Editor::~Editor() = default;
 
-bool Editor::save(const QString *path) {
+bool Editor::save(const QString &path) {
   QString p;
-  if (!path || path->isEmpty()) {
-    p = QFileDialog::getSaveFileName(this, tr("Save As"),
-                                     path ? QString() : m_filePath);
+  if (path.isEmpty()) {
+    p = QFileDialog::getSaveFileName(this, tr("Save As"), m_filePath);
     if (p.isEmpty())
       return false;
   } else {
-    p = *path;
+    p = path;
   }
 
   QFile file(p);
@@ -72,7 +71,7 @@ void Editor::close(bool canCancel) {
             auto *clicked = msgBox->clickedButton();
 
             if (clicked == saveBtn || clicked == saveAsBtn) {
-              if (save(clicked == saveAsBtn ? nullptr : &m_filePath))
+              if (save(clicked == saveAsBtn ? "" : m_filePath))
                 emit closed();
               else if (!canCancel)
                 emit closed();
