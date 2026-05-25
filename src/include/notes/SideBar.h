@@ -13,12 +13,12 @@ public:
   explicit SideBar(QWidget *parent = nullptr);
 
   FileTree *fileTree() const;
-  void setSelectedFolder(const QString &dir);
+  void setRecentFolders(const QList<QString> &folders);
+
+signals:
+  void folderOpened(const QString &path);
 
 private:
-  void onOpenFolder();
-  void onFolderSelected(int index);
-
   FileTree *m_fileTree = nullptr;
   QComboBox *m_folderCombo = nullptr;
 };

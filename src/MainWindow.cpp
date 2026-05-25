@@ -9,20 +9,22 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QCloseEvent>
+#include <QCoreApplication>
 #include <QIcon>
 #include <QMenu>
 #include <QMenuBar>
+#include <QSettings>
 #include <QSplitter>
 #include <QStatusBar>
-#include <QToolBar>
-
-#include <QCoreApplication>
 #include <QTextEdit>
+#include <QToolBar>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   m_editorTabs = new EditorTabs(this);
 
   setupSplitter();
+  loadRecentFolders();
+  m_sidebar->setRecentFolders(m_recentFolders);
   setupActions();
   setupMenuBar();
   setupToolBar();
@@ -289,8 +291,15 @@ void MainWindow::setupSplitter() {
           [this](const QString &path) { m_editorTabs->openDocument(path); });
   connect(this, &MainWindow::workDirChanged, this, [this](const QDir &dir) {
     const QString path = dir.absolutePath();
-    // setSelectedFolder already updates fileTab
-    m_sidebar->setSelectedFolder(path);
+    emit m_sidebar->folderOpened(path);
+  });
+  connect(m_sidebar, &SideBar::folderOpened, this, [this](const QString &path) {
+    m_recentFolders.removeAll(path);
+    m_recentFolders.prepend(path);
+    if (m_recentFolders.size() > 10)
+      m_recentFolders = m_recentFolders.mid(0, 10);
+    m_sidebar->setRecentFolders(m_recentFolders);
+    saveRecentFolders();
   });
 }
 
@@ -361,4 +370,14 @@ void MainWindow::setWorkDir(const QDir &dir) {
     return;
   m_workDir = dir;
   emit workDirChanged(dir);
+}
+
+void MainWindow::loadRecentFolders() {
+  QSettings settings;
+  m_recentFolders = settings.value("recentFolders").toStringList();
+}
+
+void MainWindow::saveRecentFolders() {
+  QSettings settings;
+  settings.setValue("recentFolders", m_recentFolders);
 }

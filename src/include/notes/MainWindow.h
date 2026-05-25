@@ -6,6 +6,7 @@
 #include <QList>
 #include <QMainWindow>
 #include <QMetaObject>
+#include <QStringList>
 
 class QAction;
 class QMenu;
@@ -38,8 +39,11 @@ private:
   void setupStatusBar();
   void setupSplitter();
   void connectEditorSignals(Editor *editor);
+  void loadRecentFolders();
+  void saveRecentFolders();
 
   QDir m_workDir;
+  QStringList m_recentFolders;
   QSplitter *m_splitter = nullptr;
   SideBar *m_sidebar = nullptr;
   EditorTabs *m_editorTabs = nullptr;
