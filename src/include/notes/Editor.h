@@ -7,6 +7,8 @@
 
 class QMimeData;
 
+enum class EditorCloseRequest { Normal, Exit };
+
 class Editor : public QTextEdit {
   Q_OBJECT
 
@@ -40,11 +42,11 @@ public:
   void setFilePath(const QString &path);
 
   bool save(const QString &path = QString());
-  void close(bool canCancel = true);
+  void close(EditorCloseRequest req = EditorCloseRequest::Normal);
 
 signals:
   void formattingChanged();
-  void closed();
+  void closed(EditorCloseRequest req);
 
 private:
   bool hasFileChangedExternally() const;

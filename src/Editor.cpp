@@ -98,9 +98,11 @@ bool Editor::save(const QString &path) {
   return false;
 }
 
-void Editor::close(bool canCancel) {
+void Editor::close(EditorCloseRequest req) {
+  bool canCancel = (req == EditorCloseRequest::Normal);
+
   if (!document()->isModified()) {
-    emit closed();
+    emit closed(req);
     return;
   }
 
@@ -119,16 +121,16 @@ void Editor::close(bool canCancel) {
   msgBox->setAttribute(Qt::WA_DeleteOnClose);
 
   connect(msgBox, &QMessageBox::finished, this,
-          [this, msgBox, saveBtn, saveAsBtn, discardBtn, canCancel](int) {
+          [this, msgBox, saveBtn, saveAsBtn, discardBtn, canCancel, req](int) {
             auto *clicked = msgBox->clickedButton();
 
             if (clicked == saveBtn || clicked == saveAsBtn) {
               if (save(clicked == saveAsBtn ? "" : m_filePath))
-                emit closed();
+                emit closed(req);
               else if (!canCancel)
-                emit closed();
+                emit closed(req);
             } else if (clicked == discardBtn) {
-              emit closed();
+              emit closed(req);
             }
           });
 

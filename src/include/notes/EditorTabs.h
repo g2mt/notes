@@ -7,6 +7,8 @@
 class Editor;
 class QToolButton;
 
+enum class EditorCloseRequest;
+
 class EditorTabs : public QTabWidget {
   Q_OBJECT
 
@@ -22,14 +24,13 @@ public slots:
   void newDocument();
   void openDocument(const QString &filePath);
   void closeCurrentTab();
-  bool closeAll();
+  bool closeAll(EditorCloseRequest req);
 
 private:
   void setupNewTabButton();
   Editor *addEditorTab(const QString &title, int &index);
 
   QToolButton *m_addTabButton = nullptr;
-  bool m_closingAll = false;
 };
 
 #endif // EDITORTABS_H

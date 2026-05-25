@@ -76,6 +76,12 @@ void MainWindow::setupActions() {
   connect(m_closeTabAction, &QAction::triggered, m_editorTabs,
           &EditorTabs::closeCurrentTab);
 
+  m_closeAllTabsAction = new QAction(tr("Close &All Tabs"), this);
+  m_closeAllTabsAction->setShortcut(
+      QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_W));
+  connect(m_closeAllTabsAction, &QAction::triggered, m_editorTabs,
+          [this]() { m_editorTabs->closeAll(EditorCloseRequest::Normal); });
+
   m_quitAction =
       new QAction(QIcon::fromTheme("application-exit"), tr("&Quit"), this);
   m_quitAction->setShortcut(QKeySequence::Quit);
@@ -228,6 +234,7 @@ void MainWindow::setupMenuBar() {
   m_fileMenu->addAction(m_saveAsAction);
   m_fileMenu->addSeparator();
   m_fileMenu->addAction(m_closeTabAction);
+  m_fileMenu->addAction(m_closeAllTabsAction);
   m_fileMenu->addAction(m_quitAction);
 
   m_editMenu = menuBar()->addMenu(tr("&Edit"));
@@ -312,7 +319,7 @@ void MainWindow::setupSplitter() {
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
-  if (m_editorTabs->closeAll())
+  if (m_editorTabs->closeAll(EditorCloseRequest::Exit))
     event->ignore();
   else
     event->accept();

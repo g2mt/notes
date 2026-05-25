@@ -19,7 +19,7 @@ EditorTabs::EditorTabs(QWidget *parent) : QTabWidget(parent) {
   connect(this, &QTabWidget::tabCloseRequested, this, [this](int index) {
     auto *editor = qobject_cast<Editor *>(widget(index));
     if (editor)
-      editor->close();
+      editor->close(EditorCloseRequest::Normal);
   });
 
   connect(this, &QTabWidget::currentChanged, this, [this](int index) {
@@ -76,21 +76,18 @@ void EditorTabs::openDocument(const QString &filePath) {
 void EditorTabs::closeCurrentTab() {
   auto *editor = currentEditor();
   if (editor)
-    editor->close();
+    editor->close(EditorCloseRequest::Normal);
 }
 
-bool EditorTabs::closeAll() {
+bool EditorTabs::closeAll(EditorCloseRequest req) {
   if (count() == 0)
     return false;
-  if (m_closingAll)
-    return false;
-  m_closingAll = true;
   QList<Editor *> editors;
   for (int i = 0; i < count(); ++i)
     editors.append(qobject_cast<Editor *>(widget(i)));
 
   for (auto *editor : editors)
-    editor->close(false);
+    editor->close(req);
   return true;
 }
 
@@ -98,12 +95,12 @@ Editor *EditorTabs::addEditorTab(const QString &title, int &index) {
   auto *editor = new Editor(this);
   index = addTab(editor, title.isEmpty() ? tr("Untitled") : title);
 
-  connect(editor, &Editor::closed, this, [this, editor]() {
+  connect(editor, &Editor::closed, this, [this, editor](EditorCloseRequest req) {
     int idx = indexOf(editor);
     if (idx >= 0)
       removeTab(idx);
     if (count() == 0) {
-      if (m_closingAll)
+      if (req == EditorCloseRequest::Exit)
         qApp->quit();
       else
         newDocument();
