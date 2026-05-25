@@ -1,6 +1,7 @@
 #ifndef EDITOR_H
 #define EDITOR_H
 
+#include <QDateTime>
 #include <QTextEdit>
 
 class QMimeData;
@@ -45,6 +46,8 @@ signals:
 
 private:
   QString m_filePath;
+  QDateTime m_fileLastModified;
+  qint64 m_fileSize = 0;
 };
 
 #endif // EDITOR_H

@@ -56,7 +56,7 @@ void MainWindow::setupActions() {
   });
 
   m_saveAsAction =
-      new QAction(QIcon::fromTheme("document-save-as"), tr("Save &As"), this);
+      new QAction(QIcon::fromTheme("document-save-as"), tr("Save &as"), this);
   m_saveAsAction->setShortcut(QKeySequence::SaveAs);
   connect(m_saveAsAction, &QAction::triggered, this, [this]() {
     if (auto *editor = m_editorTabs->currentEditor())
