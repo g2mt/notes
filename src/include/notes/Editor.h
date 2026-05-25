@@ -2,6 +2,7 @@
 #define EDITOR_H
 
 #include <QDateTime>
+#include <QFocusEvent>
 #include <QTextEdit>
 
 class QMimeData;
@@ -33,6 +34,7 @@ public:
   void insertTable(int rows, int cols);
 
   void insertFromMimeData(const QMimeData *source) override;
+  void focusInEvent(QFocusEvent *event) override;
 
   const QString &filePath() const;
   void setFilePath(const QString &path);
@@ -45,6 +47,8 @@ signals:
   void closed();
 
 private:
+  bool hasFileChangedExternally() const;
+
   QString m_filePath;
   QDateTime m_fileLastModified;
   qint64 m_fileSize = 0;

@@ -5,9 +5,10 @@
 - Add comments ONLY if it's not immediately obvious from a cursory glance of the code.
 - Organize your class files in the method order:
   1. Constructor/destructor
-  2. Setup methods
-  3. Event handlers (optional, prefer lambdas)
-  4. Signals (in headers)
+  2. Helper/setup methods
+  3. Getter/setter methods
+  4. Event handlers (optional, prefer lambdas)
+  5. Signals (in headers)
 - Store header files in `src/include/notes`
 - Wrap any operation with multiple insertion/deletion calls in `QTextCursor::beginEditBlock()` / `endEditBlock()` to keep undo steps atomic
 

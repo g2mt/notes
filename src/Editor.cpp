@@ -26,6 +26,28 @@ Editor::Editor(QWidget *parent) : QTextEdit(parent) {
 
 Editor::~Editor() = default;
 
+bool Editor::hasFileChangedExternally() const {
+  if (m_filePath.isEmpty())
+    return false;
+
+  QFileInfo fi(m_filePath);
+  return fi.lastModified() != m_fileLastModified || fi.size() != m_fileSize;
+}
+
+const QString &Editor::filePath() const { return m_filePath; }
+
+void Editor::setFilePath(const QString &path) {
+  m_filePath = path;
+  QFileInfo fi(path);
+  if (fi.exists()) {
+    m_fileLastModified = fi.lastModified();
+    m_fileSize = fi.size();
+  } else {
+    m_fileLastModified = QDateTime();
+    m_fileSize = 0;
+  }
+}
+
 bool Editor::save(const QString &path) {
   QString p;
   if (path.isEmpty()) {
@@ -36,36 +58,29 @@ bool Editor::save(const QString &path) {
     p = path;
   }
 
-  // Check if the file has changed externally since we last recorded its state
-  QFileInfo fi(p);
-  if (fi.exists()) {
-    QDateTime mod = fi.lastModified();
-    qint64 size = fi.size();
-    if (mod != m_fileLastModified || size != m_fileSize) {
-      QMessageBox msgBox(this);
-      msgBox.setWindowTitle(tr("File Changed"));
-      msgBox.setText(tr("The file has been modified outside the editor."));
-      msgBox.setInformativeText(
-          tr("Do you want to overwrite it, save elsewhere, or discard?"));
-      auto *overwriteBtn =
-          msgBox.addButton(tr("&Overwrite"), QMessageBox::AcceptRole);
-      auto *saveAsBtn =
-          msgBox.addButton(tr("Save &as"), QMessageBox::AcceptRole);
-      auto *discardBtn =
-          msgBox.addButton(tr("&Discard"), QMessageBox::DestructiveRole);
-      msgBox.setDefaultButton(overwriteBtn);
-      msgBox.setIcon(QMessageBox::Warning);
+  if (p == m_filePath && hasFileChangedExternally()) {
+    QMessageBox msgBox(this);
+    msgBox.setWindowTitle(tr("File Changed"));
+    msgBox.setText(tr("The file has been modified outside the editor."));
+    msgBox.setInformativeText(
+        tr("Do you want to overwrite it, save elsewhere, or discard?"));
+    auto *overwriteBtn =
+        msgBox.addButton(tr("&Overwrite"), QMessageBox::AcceptRole);
+    auto *saveAsBtn = msgBox.addButton(tr("Save &as"), QMessageBox::AcceptRole);
+    auto *discardBtn =
+        msgBox.addButton(tr("&Discard"), QMessageBox::DestructiveRole);
+    msgBox.setDefaultButton(overwriteBtn);
+    msgBox.setIcon(QMessageBox::Warning);
 
-      msgBox.exec();
-      auto *clicked = msgBox.clickedButton();
+    msgBox.exec();
+    auto *clicked = msgBox.clickedButton();
 
-      if (clicked == saveAsBtn) {
-        p = QFileDialog::getSaveFileName(this, tr("Save File as"), m_filePath);
-        if (p.isEmpty())
-          return false;
-      } else if (clicked == discardBtn) {
+    if (clicked == saveAsBtn) {
+      p = QFileDialog::getSaveFileName(this, tr("Save File as"), m_filePath);
+      if (p.isEmpty())
         return false;
-      }
+    } else if (clicked == discardBtn) {
+      return false;
     }
   }
 
@@ -118,20 +133,6 @@ void Editor::close(bool canCancel) {
           });
 
   msgBox->open();
-}
-
-const QString &Editor::filePath() const { return m_filePath; }
-
-void Editor::setFilePath(const QString &path) {
-  m_filePath = path;
-  QFileInfo fi(path);
-  if (fi.exists()) {
-    m_fileLastModified = fi.lastModified();
-    m_fileSize = fi.size();
-  } else {
-    m_fileLastModified = QDateTime();
-    m_fileSize = 0;
-  }
 }
 
 void Editor::setBold(bool bold) {
@@ -283,4 +284,37 @@ void Editor::insertFromMimeData(const QMimeData *source) {
   QTextDocument doc;
   doc.setMarkdown(markdown);
   textCursor().insertHtml(doc.toHtml());
+}
+
+void Editor::focusInEvent(QFocusEvent *event) {
+  if (hasFileChangedExternally()) {
+    QFileInfo fi(m_filePath);
+    QMessageBox msgBox(this);
+    msgBox.setWindowTitle(tr("File Changed"));
+    msgBox.setText(tr("The file has been modified outside the editor."));
+    msgBox.setInformativeText(
+        tr("Do you want to reload it or discard the external changes?"));
+    auto *reloadBtn = msgBox.addButton(tr("&Reload"), QMessageBox::AcceptRole);
+    auto *discardBtn =
+        msgBox.addButton(tr("&Discard"), QMessageBox::DestructiveRole);
+    msgBox.setDefaultButton(reloadBtn);
+    msgBox.setIcon(QMessageBox::Question);
+
+    msgBox.exec();
+    auto *clicked = msgBox.clickedButton();
+
+    if (clicked == reloadBtn) {
+      QFile file(m_filePath);
+      if (file.open(QIODevice::ReadOnly))
+        setMarkdown(QString::fromUtf8(file.readAll()));
+      m_fileLastModified = fi.lastModified();
+      m_fileSize = fi.size();
+      document()->setModified(false);
+    } else {
+      m_fileLastModified = fi.lastModified();
+      m_fileSize = fi.size();
+    }
+  }
+
+  QTextEdit::focusInEvent(event);
 }
