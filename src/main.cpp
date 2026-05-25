@@ -16,9 +16,12 @@ int main(int argc, char *argv[]) {
       QStringList() << "d" << "directory",
       "Open <directory> instead of the current working directory.",
       "directory"));
+  parser.addPositionalArgument("file", "File(s) to open", "[file...]");
   parser.process(app);
 
-  MainWindow window(parser.value("directory"));
+  const QStringList files = parser.positionalArguments();
+
+  MainWindow window(parser.value("directory"), files);
   window.show();
 
   return app.exec();

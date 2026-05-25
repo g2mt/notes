@@ -19,7 +19,8 @@
 #include <QTextEdit>
 #include <QToolBar>
 
-MainWindow::MainWindow(const QString &dirPath, QWidget *parent)
+MainWindow::MainWindow(const QString &dirPath, const QStringList &files,
+                       QWidget *parent)
     : QMainWindow(parent) {
   m_workDir = dirPath.isEmpty() ? QDir::current() : QDir(dirPath);
   m_editorTabs = new EditorTabs(this);
@@ -31,6 +32,11 @@ MainWindow::MainWindow(const QString &dirPath, QWidget *parent)
   setupMenuBar();
   setupToolBar();
   setupStatusBar();
+
+  for (const auto &file : files) {
+    if (!file.isEmpty())
+      m_editorTabs->openDocument(file);
+  }
 
   setWindowTitle(tr("notes"));
   resize(800, 600);

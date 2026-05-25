@@ -21,7 +21,7 @@ class MainWindow : public QMainWindow {
   Q_OBJECT
 
 public:
-  explicit MainWindow(const QString &dirPath = QString(),
+  explicit MainWindow(const QString &dirPath, const QStringList &files,
                  QWidget *parent = nullptr);
 
   const QDir &workDir() const;
