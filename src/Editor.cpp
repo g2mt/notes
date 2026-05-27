@@ -11,7 +11,8 @@
 
 Editor::Editor(QWidget *parent) : QScrollArea(parent) {
   m_document = new EditorDocument(this);
-  qDebug() << "Editor::Editor";
+  setWidget(m_document);
+  setWidgetResizable(true);
 }
 
 Editor::~Editor() = default;

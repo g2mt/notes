@@ -2,16 +2,29 @@
 #define EDITOR_DOCUMENT_H
 
 #include <QLabel>
+#include <QMargins>
 #include <QObject>
+#include <QStack>
 #include <QTextCharFormat>
 #include <QWidget>
 
+#include <md4c.h>
+
 class EditorDocument;
+
+struct EditorFragmentSub {
+  int textOffsetStart;
+  int textOffsetEnd;
+  QPoint pixelOffset;
+};
+
 class EditorElement : public QWidget {
   friend class EditorDocument;
   Q_OBJECT
 
 public:
+  explicit EditorElement(QWidget *parent = nullptr);
+
   EditorDocument *document() const;
   QString toMarkdown() const;
 
@@ -23,12 +36,19 @@ class EditorBlock : public EditorElement {
   Q_OBJECT
 
 public:
-  // Selection is set by the EditorCursor
+  EditorBlock(QWidget *parent = nullptr);
 
+  QSize sizeHint() const override;
   bool isSelected() const;
 
+  void relayoutFragments();
+
 protected:
+  void resizeEvent(QResizeEvent *event) override;
+  void paintEvent(QPaintEvent *event) override;
+
   bool m_selected;
+  QMargins m_margins;
 };
 
 class EditorListBlock : public EditorBlock {};
@@ -36,8 +56,12 @@ class EditorTableBlock : public EditorBlock {};
 
 class EditorFragment : public EditorElement {
   Q_OBJECT
+  Q_PROPERTY(QString text READ text WRITE setText)
+  Q_PROPERTY(QTextCharFormat charFormat READ charFormat WRITE setCharFormat)
 
 public:
+  EditorFragment(QWidget *parent = nullptr);
+
   const QString &text() const;
 
   QTextCharFormat charFormat() const;
@@ -46,17 +70,25 @@ public:
   int selectionStart() const;
   int selectionEnd() const;
 
+  int preferredWidth() const;
+  int lineHeight() const;
+  int widthForText(const QString &text) const;
+
+  QList<EditorFragmentSub> subs() const;
+  void setSubs(QList<EditorFragmentSub>);
+
 public slots:
   void setText(QString &);
+
+protected:
+  void paintEvent(QPaintEvent *event) override;
 
 private:
   QString m_text;
   QTextCharFormat m_charFormat;
-  // May be set by EditorCursor.
-  int m_selectionStart;
-  // May be set by EditorCursor. Equals to m_selectionStart for single
-  // selections.
-  int m_selectionEnd;
+  int m_selectionStart = -1;
+  int m_selectionEnd = -1;
+  QList<EditorFragmentSub> m_subs;
 };
 
 class EditorCursor : public QObject {
@@ -83,9 +115,21 @@ public:
 signals:
   void modificationChanged(bool);
 
+protected:
+  void resizeEvent(QResizeEvent *event) override;
+
 private:
+  static int enterBlock(MD_BLOCKTYPE type, void *detail, void *userdata);
+  static int leaveBlock(MD_BLOCKTYPE type, void *detail, void *userdata);
+  static int enterSpan(MD_SPANTYPE type, void *detail, void *userdata);
+  static int leaveSpan(MD_SPANTYPE type, void *detail, void *userdata);
+  static int textCallback(MD_TEXTTYPE type, const MD_CHAR *text, MD_SIZE size,
+                          void *userdata);
+
   bool m_modified = false;
   EditorCursor *cursor = nullptr;
+  QStack<EditorBlock *> m_blockStack;
+  QStack<QTextCharFormat> m_formatStack;
 };
 
 #endif // EDITOR_DOCUMENT_H

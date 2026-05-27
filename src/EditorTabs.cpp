@@ -1,5 +1,6 @@
 #include "notes/EditorTabs.h"
 #include "notes/Editor.h"
+#include "notes/EditorDocument.h"
 
 #include <QApplication>
 #include <QCloseEvent>
