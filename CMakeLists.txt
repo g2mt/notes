@@ -29,6 +29,8 @@ add_executable(notes
     src/EditorDocument/EditorElement.cpp
     src/EditorDocument/EditorBlock.cpp
     src/EditorDocument/EditorFragment.cpp
+    src/EditorDocument/EditorBrFragment.cpp
+    src/EditorDocument/EditorTextFragment.cpp
     src/EditorDocument/EditorCursor.cpp
     src/EditorTabs.cpp
     src/DocumentManager.cpp

@@ -80,7 +80,6 @@ public:
 
   int preferredWidth() const;
   int lineHeight() const;
-  int widthForText(const QString &text) const;
 
   QList<EditorFragmentSub> subs() const;
   void setSubs(QList<EditorFragmentSub>);
