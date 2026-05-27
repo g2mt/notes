@@ -5,6 +5,45 @@
 #include <QResizeEvent>
 #include <QVBoxLayout>
 
+static const char *kBlockTypeNames[] = {
+    [MD_BLOCK_DOC] = "MD_BLOCK_DOC",
+    [MD_BLOCK_QUOTE] = "MD_BLOCK_QUOTE",
+    [MD_BLOCK_UL] = "MD_BLOCK_UL",
+    [MD_BLOCK_OL] = "MD_BLOCK_OL",
+    [MD_BLOCK_LI] = "MD_BLOCK_LI",
+    [MD_BLOCK_HR] = "MD_BLOCK_HR",
+    [MD_BLOCK_H] = "MD_BLOCK_H",
+    [MD_BLOCK_CODE] = "MD_BLOCK_CODE",
+    [MD_BLOCK_HTML] = "MD_BLOCK_HTML",
+    [MD_BLOCK_P] = "MD_BLOCK_P",
+    [MD_BLOCK_TABLE] = "MD_BLOCK_TABLE",
+    [MD_BLOCK_THEAD] = "MD_BLOCK_THEAD",
+    [MD_BLOCK_TBODY] = "MD_BLOCK_TBODY",
+    [MD_BLOCK_TR] = "MD_BLOCK_TR",
+    [MD_BLOCK_TH] = "MD_BLOCK_TH",
+    [MD_BLOCK_TD] = "MD_BLOCK_TD",
+    [MD_BLOCK_FOOTNOTE_DEF_SECTION] = "MD_BLOCK_FOOTNOTE_DEF_SECTION",
+    [MD_BLOCK_FOOTNOTE_DEF] = "MD_BLOCK_FOOTNOTE_DEF",
+    [MD_BLOCK_ADMONITION] = "MD_BLOCK_ADMONITION",
+};
+
+static const char *kSpanTypeNames[] = {
+    [MD_SPAN_EM] = "MD_SPAN_EM",
+    [MD_SPAN_STRONG] = "MD_SPAN_STRONG",
+    [MD_SPAN_A] = "MD_SPAN_A",
+    [MD_SPAN_IMG] = "MD_SPAN_IMG",
+    [MD_SPAN_CODE] = "MD_SPAN_CODE",
+    [MD_SPAN_DEL] = "MD_SPAN_DEL",
+    [MD_SPAN_LATEXMATH] = "MD_SPAN_LATEXMATH",
+    [MD_SPAN_LATEXMATH_DISPLAY] = "MD_SPAN_LATEXMATH_DISPLAY",
+    [MD_SPAN_WIKILINK] = "MD_SPAN_WIKILINK",
+    [MD_SPAN_U] = "MD_SPAN_U",
+    [MD_SPAN_SPOILER] = "MD_SPAN_SPOILER",
+    [MD_SPAN_SUPERSCRIPT] = "MD_SPAN_SUPERSCRIPT",
+    [MD_SPAN_SUBSCRIPT] = "MD_SPAN_SUBSCRIPT",
+    [MD_SPAN_FOOTNOTE_REF] = "MD_SPAN_FOOTNOTE_REF",
+};
+
 EditorDocument::EditorDocument(Editor *parent) : QWidget(parent) {
   auto *layout = new QVBoxLayout(this);
   layout->setContentsMargins(0, 0, 0, 0);
@@ -83,6 +122,14 @@ int EditorDocument::enterSpan(MD_SPANTYPE type, void *detail, void *userdata) {
   case MD_SPAN_SUBSCRIPT:
     fmt.setVerticalAlignment(QTextCharFormat::AlignSubScript);
     break;
+  case MD_SPAN_A: {
+    auto *linkDetail = static_cast<MD_SPAN_A_DETAIL *>(detail);
+    fmt.setAnchorHref(
+        QString::fromUtf8(linkDetail->href.text, linkDetail->href.size));
+    fmt.setForeground(Qt::blue);
+    fmt.setFontUnderline(true);
+    break;
+  }
   default:
     break;
   }
@@ -137,15 +184,19 @@ void EditorDocument::setMarkdown(const QString &markdown) {
                  MD_FLAG_TABLES | MD_FLAG_UNDERLINE | MD_FLAG_SUPERSCRIPTS |
                  MD_FLAG_SUBSCRIPTS;
   parser.enter_block = [](MD_BLOCKTYPE type, void *detail, void *userdata) {
+    qDebug() << "enter_block" << kBlockTypeNames[type];
     return EditorDocument::enterBlock(type, detail, userdata);
   };
   parser.leave_block = [](MD_BLOCKTYPE type, void *detail, void *userdata) {
+    qDebug() << "leave_block" << kBlockTypeNames[type];
     return EditorDocument::leaveBlock(type, detail, userdata);
   };
   parser.enter_span = [](MD_SPANTYPE type, void *detail, void *userdata) {
+    qDebug() << "enter_span" << kSpanTypeNames[type];
     return EditorDocument::enterSpan(type, detail, userdata);
   };
   parser.leave_span = [](MD_SPANTYPE type, void *detail, void *userdata) {
+    qDebug() << "leave_span" << kSpanTypeNames[type];
     return EditorDocument::leaveSpan(type, detail, userdata);
   };
   parser.text = [](MD_TEXTTYPE type, const MD_CHAR *text, MD_SIZE size,
