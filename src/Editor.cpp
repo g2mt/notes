@@ -18,7 +18,7 @@ Editor::~Editor() = default;
 
 EditorDocument *Editor::document() const { return m_document; }
 
-void Editor::setMarkdown(const QString &text) { qDebug() << "setMarkdown"; }
+void Editor::setMarkdown(const QString &text) { m_document->setMarkdown(text); }
 
 //
 // File Saving / Loading

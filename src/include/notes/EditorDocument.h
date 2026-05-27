@@ -38,13 +38,19 @@ class EditorFragment : public EditorElement {
   Q_OBJECT
 
 public:
+  const QString &text() const;
+
   QTextCharFormat charFormat() const;
   void setCharFormat(QTextCharFormat);
 
   int selectionStart() const;
   int selectionEnd() const;
 
+public slots:
+  void setText(QString &);
+
 private:
+  QString m_text;
   QTextCharFormat m_charFormat;
   // May be set by EditorCursor.
   int m_selectionStart;
@@ -72,6 +78,7 @@ public:
   bool isEmpty() const;
   bool isModified() const;
   void setModified(bool);
+  void setMarkdown(const QString &);
 
 signals:
   void modificationChanged(bool);
