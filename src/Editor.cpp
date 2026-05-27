@@ -1,4 +1,5 @@
 #include "notes/Editor.h"
+#include "notes/EditorBridge_p.h"
 
 #include <QEventLoop>
 #include <QFile>
@@ -14,95 +15,17 @@
 #include <QWebEnginePage>
 #include <QWebEngineView>
 
-void EditorPage::javaScriptConsoleMessage(
-    JavaScriptConsoleMessageLevel level, const QString &message,
-    int lineNumber, const QString &sourceID) {
+void EditorPage::javaScriptConsoleMessage(JavaScriptConsoleMessageLevel level,
+                                          const QString &message,
+                                          int lineNumber,
+                                          const QString &sourceID) {
   const char *prefix = "js: ";
   if (level == ErrorMessageLevel)
     prefix = "js error: ";
   else if (level == WarningMessageLevel)
     prefix = "js warn: ";
-  qDebug().noquote()
-      << prefix << message << "\n    at" << sourceID << ":" << lineNumber;
-}
-
-ProseBridge::ProseBridge(QObject *parent) : QObject(parent) {}
-
-bool ProseBridge::isBold() const { return m_bold; }
-bool ProseBridge::isItalic() const { return m_italic; }
-bool ProseBridge::isUnderline() const { return m_underline; }
-bool ProseBridge::isStrikethrough() const { return m_strikethrough; }
-bool ProseBridge::isSuperscript() const { return m_superscript; }
-bool ProseBridge::isSubscript() const { return m_subscript; }
-bool ProseBridge::isModified() const { return m_modified; }
-bool ProseBridge::isUndoAvail() const { return m_undoAvail; }
-bool ProseBridge::isRedoAvail() const { return m_redoAvail; }
-
-void ProseBridge::setModified(bool modified) {
-  if (m_modified != modified) {
-    m_modified = modified;
-    emit modificationChanged(modified);
-  }
-}
-
-void ProseBridge::notifyFormattingChanged(bool bold, bool italic,
-                                          bool underline, bool strikethrough,
-                                          bool superscript, bool subscript) {
-  bool changed =
-      (m_bold != bold || m_italic != italic || m_underline != underline ||
-       m_strikethrough != strikethrough || m_superscript != superscript ||
-       m_subscript != subscript);
-  m_bold = bold;
-  m_italic = italic;
-  m_underline = underline;
-  m_strikethrough = strikethrough;
-  m_superscript = superscript;
-  m_subscript = subscript;
-  if (changed)
-    emit formattingChanged();
-}
-
-void ProseBridge::notifyModificationChanged(bool modified) {
-  if (m_modified != modified) {
-    m_modified = modified;
-    emit modificationChanged(modified);
-  }
-}
-
-void ProseBridge::notifyUndoAvailable(bool available) {
-  if (m_undoAvail != available) {
-    m_undoAvail = available;
-    emit undoAvailable(available);
-  }
-}
-
-void ProseBridge::notifyRedoAvailable(bool available) {
-  if (m_redoAvail != available) {
-    m_redoAvail = available;
-    emit redoAvailable(available);
-  }
-}
-
-static QString jsStringLiteral(const QString &s) {
-  QString result;
-  result.reserve(s.size() + 2);
-  result += QLatin1Char('"');
-  for (const QChar &c : s) {
-    if (c == QLatin1Char('\\'))
-      result += QStringLiteral("\\\\");
-    else if (c == QLatin1Char('"'))
-      result += QStringLiteral("\\\"");
-    else if (c == QLatin1Char('\n'))
-      result += QStringLiteral("\\n");
-    else if (c == QLatin1Char('\r'))
-      result += QStringLiteral("\\r");
-    else if (c == QLatin1Char('\t'))
-      result += QStringLiteral("\\t");
-    else
-      result += c;
-  }
-  result += QLatin1Char('"');
-  return result;
+  qDebug().noquote() << prefix << message << "\n    at" << sourceID << ":"
+                     << lineNumber;
 }
 
 Editor::Editor(QWidget *parent) : QWidget(parent) {
@@ -112,7 +35,7 @@ Editor::Editor(QWidget *parent) : QWidget(parent) {
   m_webView = new QWebEngineView(this);
   m_webView->setPage(new EditorPage(m_webView));
   m_channel = new QWebChannel(this);
-  m_bridge = new ProseBridge(this);
+  m_bridge = new EditorBridge(this);
 
   m_channel->registerObject(QStringLiteral("bridge"), m_bridge);
   m_webView->page()->setWebChannel(m_channel);
@@ -120,21 +43,21 @@ Editor::Editor(QWidget *parent) : QWidget(parent) {
   // Block until the ProseMirror page finishes loading so that
   // runJs calls made immediately after construction are safe.
   QEventLoop loop;
-  connect(m_webView, &QWebEngineView::loadFinished, &loop, &QEventLoop::quit);
+  connect(m_bridge, &EditorBridge::loaded, &loop, &QEventLoop::quit);
   m_webView->setUrl(
       QUrl(QStringLiteral("qrc:/frontend/static/prose-editor.html")));
   loop.exec();
 
   layout->addWidget(m_webView);
 
-  connect(m_bridge, &ProseBridge::formattingChanged, this,
+  connect(m_bridge, &EditorBridge::formattingChanged, this,
           &Editor::formattingChanged);
-  connect(m_bridge, &ProseBridge::modificationChanged, this,
+  connect(m_bridge, &EditorBridge::modificationChanged, this,
           &Editor::modificationChanged);
-  connect(m_bridge, &ProseBridge::undoAvailable, this, &Editor::undoAvailable);
-  connect(m_bridge, &ProseBridge::redoAvailable, this, &Editor::redoAvailable);
+  connect(m_bridge, &EditorBridge::undoAvailable, this, &Editor::undoAvailable);
+  connect(m_bridge, &EditorBridge::redoAvailable, this, &Editor::redoAvailable);
 
-  connect(m_bridge, &ProseBridge::modificationChanged, this,
+  connect(m_bridge, &EditorBridge::modificationChanged, this,
           &QWidget::setWindowModified);
 }
 
@@ -291,17 +214,8 @@ void Editor::setSubscript(bool sub) {
   runJs(QStringLiteral("proseCommands.toggleSubscript()"));
 }
 
-bool Editor::isBold() const { return m_bridge->isBold(); }
-
-bool Editor::isItalic() const { return m_bridge->isItalic(); }
-
-bool Editor::isUnderline() const { return m_bridge->isUnderline(); }
-
 void Editor::setMarkdown(const QString &markdown) {
-  QString escaped = jsStringLiteral(markdown);
-  m_webView->page()->runJavaScript(
-      QStringLiteral("proseCommands.setMarkdown(%1)").arg(escaped),
-      [this](const QVariant &) { m_bridge->setModified(false); });
+  emit m_bridge->markdownChanged(markdown);
 }
 
 void Editor::wrapHeading(int level) {
@@ -329,6 +243,10 @@ bool Editor::isModified() const { return m_bridge->isModified(); }
 
 void Editor::setModified(bool modified) { m_bridge->setModified(modified); }
 
+bool Editor::isUndoAvailable() const { return false; }
+
+bool Editor::isRedoAvailable() const { return false; }
+
 bool Editor::isEmpty() const {
   QString result;
   QEventLoop loop;
@@ -341,10 +259,6 @@ bool Editor::isEmpty() const {
   return result == QStringLiteral("true");
 }
 
-bool Editor::isUndoAvailable() const { return m_bridge->isUndoAvail(); }
-
-bool Editor::isRedoAvailable() const { return m_bridge->isRedoAvail(); }
-
 void Editor::undo() { runJs(QStringLiteral("proseCommands.undo()")); }
 
 void Editor::redo() { runJs(QStringLiteral("proseCommands.redo()")); }
@@ -356,9 +270,7 @@ void Editor::copy() { m_webView->triggerPageAction(QWebEnginePage::Copy); }
 void Editor::paste() { m_webView->triggerPageAction(QWebEnginePage::Paste); }
 
 void Editor::insertPlainText(const QString &text) {
-  QString escaped = jsStringLiteral(text);
-  runJs(QStringLiteral("document.execCommand('insertText', false, %1)")
-            .arg(escaped));
+  emit m_bridge->insertPlainText(text);
 }
 
 void Editor::deleteSelection() {

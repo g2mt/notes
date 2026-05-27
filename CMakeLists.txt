@@ -52,6 +52,7 @@ add_executable(notes
     ### Contains Q_OBJECT macros, needed for automoc
     src/include/notes/DocumentManager.h
     src/include/notes/Editor.h
+    src/include/notes/EditorBridge_p.h
     src/include/notes/EditorTabs.h
     src/include/notes/FileTree.h
     src/include/notes/MainWindow.h

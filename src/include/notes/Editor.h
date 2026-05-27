@@ -9,6 +9,7 @@
 
 class QWebChannel;
 class QWebEngineView;
+class EditorBridge;
 
 class EditorPage : public QWebEnginePage {
   Q_OBJECT
@@ -19,49 +20,6 @@ protected:
   void javaScriptConsoleMessage(JavaScriptConsoleMessageLevel level,
                                 const QString &message, int lineNumber,
                                 const QString &sourceID) override;
-};
-
-class ProseBridge : public QObject {
-  Q_OBJECT
-
-public:
-  explicit ProseBridge(QObject *parent = nullptr);
-
-  bool isBold() const;
-  bool isItalic() const;
-  bool isUnderline() const;
-  bool isStrikethrough() const;
-  bool isSuperscript() const;
-  bool isSubscript() const;
-  bool isModified() const;
-  bool isUndoAvail() const;
-  bool isRedoAvail() const;
-  void setModified(bool modified);
-
-signals:
-  void formattingChanged();
-  void modificationChanged(bool modified);
-  void undoAvailable(bool available);
-  void redoAvailable(bool available);
-
-public slots:
-  void notifyFormattingChanged(bool bold, bool italic, bool underline,
-                           bool strikethrough, bool superscript,
-                           bool subscript);
-  void notifyModificationChanged(bool modified);
-  void notifyUndoAvailable(bool available);
-  void notifyRedoAvailable(bool available);
-
-private:
-  bool m_bold = false;
-  bool m_italic = false;
-  bool m_underline = false;
-  bool m_strikethrough = false;
-  bool m_superscript = false;
-  bool m_subscript = false;
-  bool m_modified = false;
-  bool m_undoAvail = false;
-  bool m_redoAvail = false;
 };
 
 enum class EditorCloseRequest { Normal, Exit };
@@ -79,10 +37,6 @@ public:
   void setStrikethrough(bool strike);
   void setSuperscript(bool super);
   void setSubscript(bool sub);
-
-  bool isBold() const;
-  bool isItalic() const;
-  bool isUnderline() const;
 
   void setMarkdown(const QString &markdown);
 
@@ -114,7 +68,8 @@ public:
   void close(EditorCloseRequest req = EditorCloseRequest::Normal);
 
 signals:
-  void formattingChanged();
+  void formattingChanged(bool bold, bool italic, bool underline,
+                         bool strikethrough, bool superscript, bool subscript);
   void closed(EditorCloseRequest req);
   void modificationChanged(bool modified);
   void undoAvailable(bool available);
@@ -130,7 +85,7 @@ private:
 
   QWebEngineView *m_webView = nullptr;
   QWebChannel *m_channel = nullptr;
-  ProseBridge *m_bridge = nullptr;
+  EditorBridge *m_bridge = nullptr;
 
   QString m_filePath;
   QDateTime m_fileLastModified;
