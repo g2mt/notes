@@ -1,5 +1,5 @@
-#if 0
 #include "notes/Editor.h"
+#include "notes/EditorDocument.h"
 
 #include <QFile>
 #include <QFileDialog>
@@ -7,25 +7,22 @@
 #include <QMessageBox>
 #include <QMimeData>
 #include <QPushButton>
-#include <QRegularExpression>
-#include <QTextCharFormat>
-#include <QTextCursor>
-#include <QTextDocument>
-#include <QTextDocumentFragment>
-#include <QTextListFormat>
 #include <QtGlobal>
 
-Editor::Editor(QWidget *parent) : QTextEdit(parent) {
-  QFile css(QStringLiteral(":/templates/document.css"));
-  if (css.open(QIODevice::ReadOnly))
-    document()->setDefaultStyleSheet(QString::fromUtf8(css.readAll()));
-  connect(this, &QTextEdit::cursorPositionChanged, this,
-          &Editor::formattingChanged);
-  connect(document(), &QTextDocument::modificationChanged, this,
-          &QWidget::setWindowModified);
+Editor::Editor(QWidget *parent) : QScrollArea(parent) {
+  m_document = new EditorDocument(this);
+  qDebug() << "Editor::Editor";
 }
 
 Editor::~Editor() = default;
+
+EditorDocument *Editor::document() const { return m_document; }
+
+void Editor::setMarkdown(const QString &text) { qDebug() << "setMarkdown"; }
+
+//
+// File Saving / Loading
+//
 
 bool Editor::hasFileChangedExternally() const {
   if (m_filePath.isEmpty())
@@ -87,13 +84,14 @@ bool Editor::save(const QString &path) {
 
   QFile file(p);
   if (file.open(QIODevice::WriteOnly)) {
-    file.write(toMarkdown().toUtf8());
+    qDebug() << "save: toMarkdown";
+    file.write(QByteArray());
     file.close();
     m_filePath = p;
     QFileInfo newFi(p);
     m_fileLastModified = newFi.lastModified();
     m_fileSize = newFi.size();
-    document()->setModified(false);
+    m_document->setModified(false);
     return true;
   }
   return false;
@@ -102,7 +100,7 @@ bool Editor::save(const QString &path) {
 void Editor::close(EditorCloseRequest req) {
   bool canCancel = (req == EditorCloseRequest::Normal);
 
-  if (!document()->isModified()) {
+  if (!m_document->isModified()) {
     emit closed(req);
     return;
   }
@@ -138,157 +136,6 @@ void Editor::close(EditorCloseRequest req) {
   msgBox->open();
 }
 
-void Editor::setBold(bool bold) {
-  QTextCharFormat fmt;
-  fmt.setFontWeight(bold ? QFont::Bold : QFont::Normal);
-  mergeCurrentCharFormat(fmt);
-}
-
-void Editor::setItalic(bool italic) {
-  QTextCharFormat fmt;
-  fmt.setFontItalic(italic);
-  mergeCurrentCharFormat(fmt);
-}
-
-void Editor::setUnderline(bool underline) {
-  QTextCharFormat fmt;
-  fmt.setFontUnderline(underline);
-  mergeCurrentCharFormat(fmt);
-}
-
-void Editor::setStrikethrough(bool strike) {
-  QTextCharFormat fmt;
-  fmt.setFontStrikeOut(strike);
-  mergeCurrentCharFormat(fmt);
-}
-
-void Editor::setSuperscript(bool super) {
-  QTextCharFormat fmt;
-  fmt.setVerticalAlignment(super ? QTextCharFormat::AlignSuperScript
-                                 : QTextCharFormat::AlignNormal);
-  mergeCurrentCharFormat(fmt);
-}
-
-void Editor::setSubscript(bool sub) {
-  QTextCharFormat fmt;
-  fmt.setVerticalAlignment(sub ? QTextCharFormat::AlignSubScript
-                               : QTextCharFormat::AlignNormal);
-  mergeCurrentCharFormat(fmt);
-}
-
-bool Editor::isBold() const {
-  return currentCharFormat().fontWeight() == QFont::Bold;
-}
-
-bool Editor::isItalic() const { return currentCharFormat().fontItalic(); }
-
-bool Editor::isUnderline() const { return currentCharFormat().fontUnderline(); }
-
-static QString stripHeadingMarkdown(const QTextDocumentFragment &fragment) {
-#if QT_VERSION >= QT_VERSION_CHECK(6, 4, 0)
-  QString md = fragment.toMarkdown().replace("\n", " ").trimmed();
-#else
-  QTextDocument doc;
-  doc.setHtml(fragment.toHtml());
-  QString md = doc.toMarkdown().trimmed();
-#endif
-
-  static const QRegularExpression headingRe(QStringLiteral("^#+\\s*"));
-  md.remove(headingRe);
-  return md;
-}
-
-void Editor::wrapHeading(int level) {
-  level = qBound(1, level, 6);
-
-  QTextCursor cursor = textCursor();
-  cursor.movePosition(QTextCursor::StartOfBlock);
-  cursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
-  if (cursor.currentTable() != nullptr || cursor.currentList() != nullptr)
-    return;
-
-  QString md = stripHeadingMarkdown(QTextDocumentFragment(cursor));
-  md = QStringLiteral("#").repeated(level) + QStringLiteral(" ") + md;
-  cursor.insertMarkdown(md);
-}
-
-void Editor::clearHeading() {
-  QTextCursor cursor = textCursor();
-  cursor.movePosition(QTextCursor::StartOfBlock);
-  cursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
-  if (cursor.currentTable() != nullptr || cursor.currentList() != nullptr)
-    return;
-
-  QString md = stripHeadingMarkdown(QTextDocumentFragment(cursor));
-  cursor.insertMarkdown(md);
-}
-
-void Editor::insertOrderedList() {
-  QTextCursor cursor = textCursor();
-  QTextListFormat fmt;
-  fmt.setStyle(QTextListFormat::ListDecimal);
-  cursor.insertList(fmt);
-}
-
-void Editor::insertUnorderedList() {
-  QTextCursor cursor = textCursor();
-  QTextListFormat fmt;
-  fmt.setStyle(QTextListFormat::ListDisc);
-  cursor.insertList(fmt);
-}
-
-void Editor::insertTable(int rows, int cols) {
-  QTextCursor cursor = textCursor();
-  QString html;
-  html += QStringLiteral("<table>");
-
-  // Header row
-  html += QStringLiteral("<thead><tr>");
-  for (int c = 0; c < cols; ++c)
-    html += QStringLiteral("<th></th>");
-  html += QStringLiteral("</tr></thead>");
-
-  // Body rows
-  if (rows > 1) {
-    html += QStringLiteral("<tbody>");
-    for (int r = 1; r < rows; ++r) {
-      html += QStringLiteral("<tr>");
-      for (int c = 0; c < cols; ++c)
-        html += QStringLiteral("<td></td>");
-      html += QStringLiteral("</tr>");
-    }
-    html += QStringLiteral("</tbody>");
-  }
-
-  html += QStringLiteral("</table>");
-
-  cursor.insertHtml(html);
-}
-
-void Editor::insertFromMimeData(const QMimeData *source) {
-  if (!source) {
-    QTextEdit::insertFromMimeData(nullptr);
-    return;
-  }
-
-  QString markdown;
-
-  if (source->hasHtml()) {
-    QTextDocument doc;
-    doc.setHtml(source->html());
-    markdown = doc.toMarkdown();
-  } else if (source->hasText()) {
-    markdown = source->text();
-  } else {
-    QTextEdit::insertFromMimeData(source);
-    return;
-  }
-
-  QTextDocument doc;
-  doc.setMarkdown(markdown);
-  textCursor().insertHtml(doc.toHtml());
-}
-
 void Editor::focusInEvent(QFocusEvent *event) {
   if (hasFileChangedExternally()) {
     QFileInfo fi(m_filePath);
@@ -308,17 +155,84 @@ void Editor::focusInEvent(QFocusEvent *event) {
 
     if (clicked == reloadBtn) {
       QFile file(m_filePath);
-      if (file.open(QIODevice::ReadOnly))
+      if (file.open(QIODevice::ReadOnly)) {
+        qDebug() << "focusInEvent: reloading" << m_filePath;
         setMarkdown(QString::fromUtf8(file.readAll()));
+      }
       m_fileLastModified = fi.lastModified();
       m_fileSize = fi.size();
-      document()->setModified(false);
+      m_document->setModified(false);
     } else {
       m_fileLastModified = fi.lastModified();
       m_fileSize = fi.size();
     }
   }
-
-  QTextEdit::focusInEvent(event);
 }
-#endif
+
+//
+// Formatting
+//
+
+void Editor::setBold(bool bold) { qDebug() << "setBold"; }
+
+void Editor::setItalic(bool italic) { qDebug() << "setItalic"; }
+
+void Editor::setUnderline(bool underline) { qDebug() << "setUnderline"; }
+
+void Editor::setStrikethrough(bool strike) { qDebug() << "setStrikethrough"; }
+
+void Editor::setSuperscript(bool super) { qDebug() << "setSuperscript"; }
+
+void Editor::setSubscript(bool sub) { qDebug() << "setSubscript"; }
+
+bool Editor::isBold() const { return false; }
+
+bool Editor::isItalic() const { return false; }
+
+bool Editor::isUnderline() const { return false; }
+
+bool Editor::isStrikethrough() const { return false; }
+
+bool Editor::isSuperscript() const { return false; }
+
+bool Editor::isSubscript() const { return false; }
+
+void Editor::wrapHeading(int level) { qDebug() << "wrapHeading"; }
+
+void Editor::clearHeading() { qDebug() << "clearHeading"; }
+
+void Editor::insertOrderedList() { qDebug() << "insertOrderedList"; }
+
+void Editor::insertUnorderedList() { qDebug() << "insertUnorderedList"; }
+
+void Editor::insertTable(int rows, int cols) { qDebug() << "insertTable"; }
+
+void Editor::insertPlainText(const QString &text) {
+  qDebug() << "insertPlainText";
+}
+
+void Editor::insertFromMimeData(const QMimeData *source) {
+  qDebug() << "insertFromMimeData";
+}
+
+void Editor::removeSelectedText() { qDebug() << "removeSelectedText"; }
+
+//
+// Clipboard / Editing
+//
+
+void Editor::clear() { qDebug() << "clear"; }
+
+void Editor::copy() { qDebug() << "copy"; }
+
+void Editor::cut() { qDebug() << "cut"; }
+
+void Editor::paste() { qDebug() << "paste"; }
+
+void Editor::undo() { qDebug() << "undo"; }
+
+void Editor::redo() { qDebug() << "redo"; }
+
+bool Editor::isUndoAvailable() const { return false; }
+
+bool Editor::isRedoAvailable() const { return false; }
