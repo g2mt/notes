@@ -1,0 +1,7 @@
+<RCC>
+  <qresource prefix="/">
+    <file alias="frontend/static/document.css">@CMAKE_SOURCE_DIR@/frontend/static/document.css</file>
+    <file alias="frontend/static/prose-editor.html">@CMAKE_SOURCE_DIR@/frontend/static/prose-editor.html</file>
+    <file alias="frontend/prose.js">@CMAKE_BINARY_DIR@/frontend/prose.js</file>
+  </qresource>
+</RCC>

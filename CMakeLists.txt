@@ -8,11 +8,37 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets WebEngineWidgets WebChannel)
 
+find_program(NPM npm REQUIRED)
+find_program(NODE node REQUIRED)
+
+set(PROSE_SRC_DIR ${CMAKE_SOURCE_DIR}/frontend)
+set(PROSE_BUNDLE ${CMAKE_BINARY_DIR}/frontend/prose.js)
+
+file(GLOB_RECURSE PROSE_TS_SOURCES
+  ${PROSE_SRC_DIR}/src/*.ts
+)
+
+add_custom_command(
+  OUTPUT ${PROSE_BUNDLE}
+  COMMAND ${NPM} install --silent
+  COMMAND ${NODE} build.js ${PROSE_BUNDLE}
+  WORKING_DIRECTORY ${PROSE_SRC_DIR}
+  DEPENDS ${PROSE_TS_SOURCES} ${PROSE_SRC_DIR}/package.json ${PROSE_SRC_DIR}/build.js
+  COMMENT "Building ProseMirror TypeScript bundle"
+)
+
+add_custom_target(prose_bundle DEPENDS ${PROSE_BUNDLE})
+
+configure_file(
+  ${CMAKE_SOURCE_DIR}/src/resources.qrc.in
+  ${CMAKE_BINARY_DIR}/resources.qrc
+  @ONLY
+)
 
 add_executable(notes
-    src/resources.qrc
+    ${CMAKE_BINARY_DIR}/resources.qrc
 
     src/main.cpp
     src/MainWindow.cpp
@@ -41,4 +67,8 @@ target_link_libraries(notes PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
+    Qt6::WebEngineWidgets
+    Qt6::WebChannel
 )
+
+add_dependencies(notes prose_bundle)

@@ -1,30 +1,145 @@
 #include "notes/Editor.h"
 
+#include <QEventLoop>
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QJsonArray>
+#include <QJsonDocument>
 #include <QMessageBox>
-#include <QMimeData>
 #include <QPushButton>
-#include <QRegularExpression>
-#include <QTextCharFormat>
-#include <QTextCursor>
-#include <QTextDocument>
-#include <QTextDocumentFragment>
-#include <QTextListFormat>
-#include <QtGlobal>
+#include <QScrollBar>
+#include <QVBoxLayout>
+#include <QWebChannel>
+#include <QWebEnginePage>
+#include <QWebEngineView>
 
-Editor::Editor(QWidget *parent) : QTextEdit(parent) {
-  QFile css(QStringLiteral(":/templates/document.css"));
-  if (css.open(QIODevice::ReadOnly))
-    document()->setDefaultStyleSheet(QString::fromUtf8(css.readAll()));
-  connect(this, &QTextEdit::cursorPositionChanged, this,
+ProseBridge::ProseBridge(QObject *parent) : QObject(parent) {}
+
+bool ProseBridge::isBold() const { return m_bold; }
+bool ProseBridge::isItalic() const { return m_italic; }
+bool ProseBridge::isUnderline() const { return m_underline; }
+bool ProseBridge::isStrikethrough() const { return m_strikethrough; }
+bool ProseBridge::isSuperscript() const { return m_superscript; }
+bool ProseBridge::isSubscript() const { return m_subscript; }
+bool ProseBridge::isModified() const { return m_modified; }
+bool ProseBridge::isUndoAvail() const { return m_undoAvail; }
+bool ProseBridge::isRedoAvail() const { return m_redoAvail; }
+
+void ProseBridge::setModified(bool modified) {
+  if (m_modified != modified) {
+    m_modified = modified;
+    emit modificationChanged(modified);
+  }
+}
+
+void ProseBridge::notifyFormattingChanged(bool bold, bool italic,
+                                          bool underline, bool strikethrough,
+                                          bool superscript, bool subscript) {
+  bool changed =
+      (m_bold != bold || m_italic != italic || m_underline != underline ||
+       m_strikethrough != strikethrough || m_superscript != superscript ||
+       m_subscript != subscript);
+  m_bold = bold;
+  m_italic = italic;
+  m_underline = underline;
+  m_strikethrough = strikethrough;
+  m_superscript = superscript;
+  m_subscript = subscript;
+  if (changed)
+    emit formattingChanged();
+}
+
+void ProseBridge::notifyModificationChanged(bool modified) {
+  if (m_modified != modified) {
+    m_modified = modified;
+    emit modificationChanged(modified);
+  }
+}
+
+void ProseBridge::notifyUndoAvailable(bool available) {
+  if (m_undoAvail != available) {
+    m_undoAvail = available;
+    emit undoAvailable(available);
+  }
+}
+
+void ProseBridge::notifyRedoAvailable(bool available) {
+  if (m_redoAvail != available) {
+    m_redoAvail = available;
+    emit redoAvailable(available);
+  }
+}
+
+static QString jsStringLiteral(const QString &s) {
+  QString result;
+  result.reserve(s.size() + 2);
+  result += QLatin1Char('"');
+  for (const QChar &c : s) {
+    if (c == QLatin1Char('\\'))
+      result += QStringLiteral("\\\\");
+    else if (c == QLatin1Char('"'))
+      result += QStringLiteral("\\\"");
+    else if (c == QLatin1Char('\n'))
+      result += QStringLiteral("\\n");
+    else if (c == QLatin1Char('\r'))
+      result += QStringLiteral("\\r");
+    else if (c == QLatin1Char('\t'))
+      result += QStringLiteral("\\t");
+    else
+      result += c;
+  }
+  result += QLatin1Char('"');
+  return result;
+}
+
+Editor::Editor(QWidget *parent) : QWidget(parent) {
+  auto *layout = new QVBoxLayout(this);
+  layout->setContentsMargins(0, 0, 0, 0);
+
+  m_webView = new QWebEngineView(this);
+  m_channel = new QWebChannel(this);
+  m_bridge = new ProseBridge(this);
+
+  m_channel->registerObject(QStringLiteral("bridge"), m_bridge);
+  m_webView->page()->setWebChannel(m_channel);
+
+  // Block until the ProseMirror page finishes loading so that
+  // runJs calls made immediately after construction are safe.
+  QEventLoop loop;
+  connect(m_webView, &QWebEngineView::loadFinished, &loop, &QEventLoop::quit);
+  m_webView->setUrl(
+      QUrl(QStringLiteral("qrc:/frontend/static/prose-editor.html")));
+  loop.exec();
+
+  layout->addWidget(m_webView);
+
+  connect(m_bridge, &ProseBridge::formattingChanged, this,
           &Editor::formattingChanged);
-  connect(document(), &QTextDocument::modificationChanged, this,
+  connect(m_bridge, &ProseBridge::modificationChanged, this,
+          &Editor::modificationChanged);
+  connect(m_bridge, &ProseBridge::undoAvailable, this, &Editor::undoAvailable);
+  connect(m_bridge, &ProseBridge::redoAvailable, this, &Editor::redoAvailable);
+
+  connect(m_bridge, &ProseBridge::modificationChanged, this,
           &QWidget::setWindowModified);
 }
 
 Editor::~Editor() = default;
+
+void Editor::runJs(const QString &js) { m_webView->page()->runJavaScript(js); }
+
+QString Editor::getMarkdownSync() {
+  QString result;
+  QEventLoop loop;
+  m_webView->page()->runJavaScript(
+      QStringLiteral("proseCommands.getMarkdown()"), [&](const QVariant &v) {
+        result = v.toString();
+        loop.quit();
+      });
+  loop.exec();
+  return result;
+}
 
 bool Editor::hasFileChangedExternally() const {
   if (m_filePath.isEmpty())
@@ -84,15 +199,17 @@ bool Editor::save(const QString &path) {
     }
   }
 
+  QString markdown = getMarkdownSync();
+
   QFile file(p);
   if (file.open(QIODevice::WriteOnly)) {
-    file.write(toMarkdown().toUtf8());
+    file.write(markdown.toUtf8());
     file.close();
     m_filePath = p;
     QFileInfo newFi(p);
     m_fileLastModified = newFi.lastModified();
     m_fileSize = newFi.size();
-    document()->setModified(false);
+    m_bridge->setModified(false);
     return true;
   }
   return false;
@@ -101,7 +218,7 @@ bool Editor::save(const QString &path) {
 void Editor::close(EditorCloseRequest req) {
   bool canCancel = (req == EditorCloseRequest::Normal);
 
-  if (!document()->isModified()) {
+  if (!m_bridge->isModified()) {
     emit closed(req);
     return;
   }
@@ -138,154 +255,101 @@ void Editor::close(EditorCloseRequest req) {
 }
 
 void Editor::setBold(bool bold) {
-  QTextCharFormat fmt;
-  fmt.setFontWeight(bold ? QFont::Bold : QFont::Normal);
-  mergeCurrentCharFormat(fmt);
+  runJs(QStringLiteral("proseCommands.toggleBold()"));
 }
 
 void Editor::setItalic(bool italic) {
-  QTextCharFormat fmt;
-  fmt.setFontItalic(italic);
-  mergeCurrentCharFormat(fmt);
+  runJs(QStringLiteral("proseCommands.toggleItalic()"));
 }
 
 void Editor::setUnderline(bool underline) {
-  QTextCharFormat fmt;
-  fmt.setFontUnderline(underline);
-  mergeCurrentCharFormat(fmt);
+  runJs(QStringLiteral("proseCommands.toggleUnderline()"));
 }
 
 void Editor::setStrikethrough(bool strike) {
-  QTextCharFormat fmt;
-  fmt.setFontStrikeOut(strike);
-  mergeCurrentCharFormat(fmt);
+  runJs(QStringLiteral("proseCommands.toggleStrikethrough()"));
 }
 
 void Editor::setSuperscript(bool super) {
-  QTextCharFormat fmt;
-  fmt.setVerticalAlignment(super ? QTextCharFormat::AlignSuperScript
-                                 : QTextCharFormat::AlignNormal);
-  mergeCurrentCharFormat(fmt);
+  runJs(QStringLiteral("proseCommands.toggleSuperscript()"));
 }
 
 void Editor::setSubscript(bool sub) {
-  QTextCharFormat fmt;
-  fmt.setVerticalAlignment(sub ? QTextCharFormat::AlignSubScript
-                               : QTextCharFormat::AlignNormal);
-  mergeCurrentCharFormat(fmt);
+  runJs(QStringLiteral("proseCommands.toggleSubscript()"));
 }
 
-bool Editor::isBold() const {
-  return currentCharFormat().fontWeight() == QFont::Bold;
-}
+bool Editor::isBold() const { return m_bridge->isBold(); }
 
-bool Editor::isItalic() const { return currentCharFormat().fontItalic(); }
+bool Editor::isItalic() const { return m_bridge->isItalic(); }
 
-bool Editor::isUnderline() const { return currentCharFormat().fontUnderline(); }
+bool Editor::isUnderline() const { return m_bridge->isUnderline(); }
 
-static QString stripHeadingMarkdown(const QTextDocumentFragment &fragment) {
-#if QT_VERSION >= QT_VERSION_CHECK(6, 4, 0)
-  QString md = fragment.toMarkdown().replace("\n", " ").trimmed();
-#else
-  QTextDocument doc;
-  doc.setHtml(fragment.toHtml());
-  QString md = doc.toMarkdown().trimmed();
-#endif
-
-  static const QRegularExpression headingRe(QStringLiteral("^#+\\s*"));
-  md.remove(headingRe);
-  return md;
+void Editor::setMarkdown(const QString &markdown) {
+  QString escaped = jsStringLiteral(markdown);
+  m_webView->page()->runJavaScript(
+      QStringLiteral("proseCommands.setMarkdown(%1)").arg(escaped),
+      [this](const QVariant &) { m_bridge->setModified(false); });
 }
 
 void Editor::wrapHeading(int level) {
   level = qBound(1, level, 6);
-
-  QTextCursor cursor = textCursor();
-  cursor.movePosition(QTextCursor::StartOfBlock);
-  cursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
-  if (cursor.currentTable() != nullptr || cursor.currentList() != nullptr)
-    return;
-
-  QString md = stripHeadingMarkdown(QTextDocumentFragment(cursor));
-  md = QStringLiteral("#").repeated(level) + QStringLiteral(" ") + md;
-  cursor.insertMarkdown(md);
+  runJs(QStringLiteral("proseCommands.wrapHeading(%1)").arg(level));
 }
 
 void Editor::clearHeading() {
-  QTextCursor cursor = textCursor();
-  cursor.movePosition(QTextCursor::StartOfBlock);
-  cursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
-  if (cursor.currentTable() != nullptr || cursor.currentList() != nullptr)
-    return;
-
-  QString md = stripHeadingMarkdown(QTextDocumentFragment(cursor));
-  cursor.insertMarkdown(md);
+  runJs(QStringLiteral("proseCommands.clearHeading()"));
 }
 
 void Editor::insertOrderedList() {
-  QTextCursor cursor = textCursor();
-  QTextListFormat fmt;
-  fmt.setStyle(QTextListFormat::ListDecimal);
-  cursor.insertList(fmt);
+  runJs(QStringLiteral("proseCommands.insertOrderedList()"));
 }
 
 void Editor::insertUnorderedList() {
-  QTextCursor cursor = textCursor();
-  QTextListFormat fmt;
-  fmt.setStyle(QTextListFormat::ListDisc);
-  cursor.insertList(fmt);
+  runJs(QStringLiteral("proseCommands.insertUnorderedList()"));
 }
 
 void Editor::insertTable(int rows, int cols) {
-  QTextCursor cursor = textCursor();
-  QString html;
-  html += QStringLiteral("<table>");
-
-  // Header row
-  html += QStringLiteral("<thead><tr>");
-  for (int c = 0; c < cols; ++c)
-    html += QStringLiteral("<th></th>");
-  html += QStringLiteral("</tr></thead>");
-
-  // Body rows
-  if (rows > 1) {
-    html += QStringLiteral("<tbody>");
-    for (int r = 1; r < rows; ++r) {
-      html += QStringLiteral("<tr>");
-      for (int c = 0; c < cols; ++c)
-        html += QStringLiteral("<td></td>");
-      html += QStringLiteral("</tr>");
-    }
-    html += QStringLiteral("</tbody>");
-  }
-
-  html += QStringLiteral("</table>");
-
-  cursor.insertHtml(html);
+  runJs(QStringLiteral("proseCommands.insertTable(%1,%2)").arg(rows).arg(cols));
 }
 
-void Editor::insertFromMimeData(const QMimeData *source) {
-  if (!source) {
-    QTextEdit::insertFromMimeData(nullptr);
-    return;
-  }
+bool Editor::isModified() const { return m_bridge->isModified(); }
 
-  QString markdown;
+void Editor::setModified(bool modified) { m_bridge->setModified(modified); }
 
-  if (source->hasHtml()) {
-    QTextDocument doc;
-    doc.setHtml(source->html());
-    markdown = doc.toMarkdown();
-  } else if (source->hasText()) {
-    markdown = source->text();
-  } else {
-    QTextEdit::insertFromMimeData(source);
-    return;
-  }
+bool Editor::isEmpty() const {
+  QString result;
+  QEventLoop loop;
+  m_webView->page()->runJavaScript(QStringLiteral("proseCommands.isEmpty()"),
+                                   [&](const QVariant &v) {
+                                     result = v.toString();
+                                     loop.quit();
+                                   });
+  loop.exec();
+  return result == QStringLiteral("true");
+}
 
-  QTextDocument doc;
-  doc.setMarkdown(markdown);
-  textCursor().insertHtml(doc.toHtml());
+bool Editor::isUndoAvailable() const { return m_bridge->isUndoAvail(); }
+
+bool Editor::isRedoAvailable() const { return m_bridge->isRedoAvail(); }
+
+void Editor::undo() { runJs(QStringLiteral("proseCommands.undo()")); }
+
+void Editor::redo() { runJs(QStringLiteral("proseCommands.redo()")); }
+
+void Editor::cut() { m_webView->triggerPageAction(QWebEnginePage::Cut); }
+
+void Editor::copy() { m_webView->triggerPageAction(QWebEnginePage::Copy); }
+
+void Editor::paste() { m_webView->triggerPageAction(QWebEnginePage::Paste); }
+
+void Editor::insertPlainText(const QString &text) {
+  QString escaped = jsStringLiteral(text);
+  runJs(QStringLiteral("document.execCommand('insertText', false, %1)")
+            .arg(escaped));
+}
+
+void Editor::deleteSelection() {
+  runJs(QStringLiteral("document.execCommand('delete')"));
 }
 
 void Editor::focusInEvent(QFocusEvent *event) {
@@ -311,12 +375,12 @@ void Editor::focusInEvent(QFocusEvent *event) {
         setMarkdown(QString::fromUtf8(file.readAll()));
       m_fileLastModified = fi.lastModified();
       m_fileSize = fi.size();
-      document()->setModified(false);
+      m_bridge->setModified(false);
     } else {
       m_fileLastModified = fi.lastModified();
       m_fileSize = fi.size();
     }
   }
 
-  QTextEdit::focusInEvent(event);
+  QWidget::focusInEvent(event);
 }

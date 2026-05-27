@@ -57,7 +57,7 @@ void EditorTabs::openDocument(const QString &filePath) {
   if (count() == 1) {
     auto *first = qobject_cast<Editor *>(widget(0));
     if (first && first->filePath().isEmpty() &&
-        !first->document()->isModified() && first->document()->isEmpty()) {
+        !first->isModified() && first->isEmpty()) {
       removeTab(0);
     }
   }
@@ -68,7 +68,7 @@ void EditorTabs::openDocument(const QString &filePath) {
     QFile file(filePath);
     if (file.open(QIODevice::ReadOnly))
       editor->setMarkdown(QString::fromUtf8(file.readAll()));
-    editor->document()->setModified(false);
+    editor->setModified(false);
   }
   setCurrentIndex(index);
 }
@@ -107,7 +107,7 @@ Editor *EditorTabs::addEditorTab(const QString &title, int &index) {
     }
   });
 
-  connect(editor->document(), &QTextDocument::modificationChanged, this,
+  connect(editor, &Editor::modificationChanged, this,
           [this, editor](bool modified) {
             int idx = indexOf(editor);
             if (idx < 0)

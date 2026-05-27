@@ -1,5 +1,0 @@
-<RCC>
-  <qresource prefix="/">
-    <file>templates/document.css</file>
-  </qresource>
-</RCC>
