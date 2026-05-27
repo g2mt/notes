@@ -364,6 +364,17 @@ void MainWindow::connectEditorSignals(Editor *editor) {
     m_editor.connections.append(
         connect(m_deleteAction, &QAction::triggered, editor,
                 &Editor::deleteSelection));
+    m_editor.connections.append(
+        connect(editor, &Editor::formattingChanged, this,
+                [this](bool bold, bool italic, bool underline,
+                       bool strikethrough, bool superscript, bool subscript) {
+                  m_boldAction->setChecked(bold);
+                  m_italicAction->setChecked(italic);
+                  m_underlineAction->setChecked(underline);
+                  m_strikethroughAction->setChecked(strikethrough);
+                  m_superscriptAction->setChecked(superscript);
+                  m_subscriptAction->setChecked(subscript);
+                }));
     m_undoAction->setEnabled(editor->isUndoAvailable());
     m_redoAction->setEnabled(editor->isRedoAvailable());
   } else {

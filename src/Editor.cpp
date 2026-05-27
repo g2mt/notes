@@ -69,7 +69,7 @@ QString Editor::getMarkdownSync() {
   QString result;
   QEventLoop loop;
   m_webView->page()->runJavaScript(
-      QStringLiteral("proseCommands.getMarkdown()"), [&](const QVariant &v) {
+      QStringLiteral("editorCommands.getMarkdown()"), [&](const QVariant &v) {
         result = v.toString();
         loop.quit();
       });
@@ -191,27 +191,27 @@ void Editor::close(EditorCloseRequest req) {
 }
 
 void Editor::setBold(bool bold) {
-  runJs(QStringLiteral("proseCommands.toggleBold()"));
+  runJs(QStringLiteral("editorCommands.toggleBold()"));
 }
 
 void Editor::setItalic(bool italic) {
-  runJs(QStringLiteral("proseCommands.toggleItalic()"));
+  runJs(QStringLiteral("editorCommands.toggleItalic()"));
 }
 
 void Editor::setUnderline(bool underline) {
-  runJs(QStringLiteral("proseCommands.toggleUnderline()"));
+  runJs(QStringLiteral("editorCommands.toggleUnderline()"));
 }
 
 void Editor::setStrikethrough(bool strike) {
-  runJs(QStringLiteral("proseCommands.toggleStrikethrough()"));
+  runJs(QStringLiteral("editorCommands.toggleStrikethrough()"));
 }
 
 void Editor::setSuperscript(bool super) {
-  runJs(QStringLiteral("proseCommands.toggleSuperscript()"));
+  runJs(QStringLiteral("editorCommands.toggleSuperscript()"));
 }
 
 void Editor::setSubscript(bool sub) {
-  runJs(QStringLiteral("proseCommands.toggleSubscript()"));
+  runJs(QStringLiteral("editorCommands.toggleSubscript()"));
 }
 
 void Editor::setMarkdown(const QString &markdown) {
@@ -220,23 +220,23 @@ void Editor::setMarkdown(const QString &markdown) {
 
 void Editor::wrapHeading(int level) {
   level = qBound(1, level, 6);
-  runJs(QStringLiteral("proseCommands.wrapHeading(%1)").arg(level));
+  runJs(QStringLiteral("editorCommands.wrapHeading(%1)").arg(level));
 }
 
 void Editor::clearHeading() {
-  runJs(QStringLiteral("proseCommands.clearHeading()"));
+  runJs(QStringLiteral("editorCommands.clearHeading()"));
 }
 
 void Editor::insertOrderedList() {
-  runJs(QStringLiteral("proseCommands.insertOrderedList()"));
+  runJs(QStringLiteral("editorCommands.insertOrderedList()"));
 }
 
 void Editor::insertUnorderedList() {
-  runJs(QStringLiteral("proseCommands.insertUnorderedList()"));
+  runJs(QStringLiteral("editorCommands.insertUnorderedList()"));
 }
 
 void Editor::insertTable(int rows, int cols) {
-  runJs(QStringLiteral("proseCommands.insertTable(%1,%2)").arg(rows).arg(cols));
+  runJs(QStringLiteral("editorCommands.insertTable(%1,%2)").arg(rows).arg(cols));
 }
 
 bool Editor::isModified() const { return m_bridge->isModified(); }
@@ -250,7 +250,7 @@ bool Editor::isRedoAvailable() const { return false; }
 bool Editor::isEmpty() const {
   QString result;
   QEventLoop loop;
-  m_webView->page()->runJavaScript(QStringLiteral("proseCommands.isEmpty()"),
+  m_webView->page()->runJavaScript(QStringLiteral("editorCommands.isEmpty()"),
                                    [&](const QVariant &v) {
                                      result = v.toString();
                                      loop.quit();
@@ -259,9 +259,9 @@ bool Editor::isEmpty() const {
   return result == QStringLiteral("true");
 }
 
-void Editor::undo() { runJs(QStringLiteral("proseCommands.undo()")); }
+void Editor::undo() { runJs(QStringLiteral("editorCommands.undo()")); }
 
-void Editor::redo() { runJs(QStringLiteral("proseCommands.redo()")); }
+void Editor::redo() { runJs(QStringLiteral("editorCommands.redo()")); }
 
 void Editor::cut() { m_webView->triggerPageAction(QWebEnginePage::Cut); }
 
