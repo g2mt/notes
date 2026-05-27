@@ -3,33 +3,14 @@
 
 #include <QDateTime>
 #include <QFocusEvent>
-#include <QTextEdit>
+#include <QScrollArea>
 
 class QMimeData;
 
-class Editor;
+class EditorDocument;
 enum class EditorCloseRequest { Normal, Exit };
 
-class EditorDocument : public QWidget {
-  Q_OBJECT
-
-public:
-  explicit EditorDocument(Editor *parent = nullptr);
-
-  bool isEmpty() const;
-  bool isModified() const;
-
-signals:
-  void modificationChanged(bool);
-
-public slots:
-  void setModified(bool);
-
-private:
-  bool m_modified = false;
-};
-
-class Editor : public QWidget {
+class Editor : public QScrollArea {
   Q_OBJECT
 
 public:
@@ -93,6 +74,7 @@ public slots:
 private:
   bool hasFileChangedExternally() const;
 
+  EditorDocument *m_document;
   QString m_filePath;
   QDateTime m_fileLastModified;
   qint64 m_fileSize = 0;
