@@ -1,8 +1,8 @@
-interface Signal<T> {
+export interface Signal<T> {
   connect(callback: (arg: T) => void): void;
 }
 
-interface NativeBridge {
+export interface NativeBridge {
   emitFormattingChanged(
       bold: boolean, italic: boolean, underline: boolean,
       strikethrough: boolean, superscript: boolean, subscript: boolean): void;

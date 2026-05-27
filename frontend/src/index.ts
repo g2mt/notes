@@ -1,5 +1,5 @@
-import {EditorCommands} from './editorCommands';
 import {initBridge} from './bridge';
+import {EditorCommands} from './EditorCommands';
 
 declare global {
   interface Window {
@@ -9,14 +9,4 @@ declare global {
 
 export function createEditor(element: HTMLElement) {
   window.editorCommands = new EditorCommands(element);
-
-  initBridge().then(bridge => {
-    bridge.markdownChanged.connect((md: string) => {
-      window.editorCommands.setMarkdown(md);
-    });
-    bridge.insertPlainText.connect((text: string) => {
-      window.editorCommands.insertPlainText(text);
-    });
-    bridge.emitLoaded();
-  });
 }
