@@ -41,7 +41,9 @@ public:
   QSize sizeHint() const override;
   bool isSelected() const;
 
-  void relayoutFragments();
+  virtual void relayoutFragments();
+  virtual void setMargins(const QMargins &margins);
+  virtual void addWidget(EditorBlock *child);
 
 protected:
   void resizeEvent(QResizeEvent *event) override;
@@ -52,8 +54,104 @@ protected:
   int m_lineHeight = 0;
 };
 
-class EditorListBlock : public EditorBlock {};
-class EditorTableBlock : public EditorBlock {};
+class EditorMultiLineBlock : public EditorBlock {
+  Q_OBJECT
+
+public:
+  EditorMultiLineBlock(QWidget *parent = nullptr);
+
+  QSize sizeHint() const override;
+  void addWidget(EditorBlock *child) override;
+  void setMargins(const QMargins &margins) override;
+  void relayoutFragments() override;
+
+protected:
+  void resizeEvent(QResizeEvent *event) override;
+};
+
+class EditorListItemBlock : public EditorBlock {
+public:
+  EditorListItemBlock(QWidget *parent = nullptr);
+  void addWidget(EditorBlock *child) override;
+  void relayoutFragments() override;
+};
+
+class EditorListBlock : public EditorMultiLineBlock {
+public:
+  enum Type { Unordered, Ordered };
+
+  EditorListBlock(Type type, QWidget *parent = nullptr);
+
+  Type listType() const;
+
+private:
+  Type m_type;
+};
+
+class EditorTableCellBlock : public EditorBlock {
+public:
+  EditorTableCellBlock(bool isHeader, QWidget *parent = nullptr);
+
+  bool isHeader() const;
+
+protected:
+  void paintEvent(QPaintEvent *event) override;
+
+private:
+  bool m_isHeader;
+};
+
+class EditorTableBlock : public EditorMultiLineBlock {
+public:
+  EditorTableBlock(QWidget *parent = nullptr);
+};
+
+class EditorHrBlock : public EditorBlock {
+public:
+  EditorHrBlock(QWidget *parent = nullptr);
+
+protected:
+  void paintEvent(QPaintEvent *event) override;
+};
+
+class EditorHeadingBlock : public EditorBlock {
+  Q_OBJECT
+
+public:
+  EditorHeadingBlock(int level, QWidget *parent = nullptr);
+
+  int headingLevel() const;
+  QFont headingFont() const;
+
+protected:
+  void paintEvent(QPaintEvent *event) override;
+
+private:
+  int m_level;
+};
+
+class EditorCodeBlock : public EditorBlock {
+  Q_OBJECT
+
+public:
+  EditorCodeBlock(QWidget *parent = nullptr);
+
+protected:
+  void paintEvent(QPaintEvent *event) override;
+};
+
+class EditorAdmonitionBlock : public EditorMultiLineBlock {
+public:
+  EditorAdmonitionBlock(const QString &type, QWidget *parent = nullptr);
+
+  QString admonitionType() const;
+
+protected:
+  void paintEvent(QPaintEvent *event) override;
+
+private:
+  QString m_type;
+};
 
 class EditorFragment : public EditorElement {
   Q_OBJECT

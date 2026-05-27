@@ -6,7 +6,7 @@
 #include <QVBoxLayout>
 
 // Uncomment to enable md4c traversal debug output
-// #define MD_TRACE_ENABLED
+#define MD_TRACE_ENABLED
 
 #ifdef MD_TRACE_ENABLED
 #define MD_TRACE qDebug()
@@ -57,7 +57,6 @@ EditorDocument::EditorDocument(Editor *parent) : QWidget(parent) {
   auto *layout = new QVBoxLayout(this);
   layout->setContentsMargins(0, 0, 0, 0);
   layout->setSpacing(0);
-  layout->addStretch();
   setLayout(layout);
 }
 
@@ -81,24 +80,140 @@ void EditorDocument::resizeEvent(QResizeEvent *event) {
     block->relayoutFragments();
 }
 
+static void addBlockToParent(EditorBlock *block, EditorDocument *doc,
+                             EditorBlock *parentBlock) {
+  if (parentBlock) {
+    parentBlock->addWidget(block);
+  } else {
+    auto *layout = qobject_cast<QVBoxLayout *>(doc->layout());
+    layout->addWidget(block);
+  }
+}
+
 int EditorDocument::enterBlock(MD_BLOCKTYPE type, void *detail,
                                void *userdata) {
   auto *doc = static_cast<EditorDocument *>(userdata);
-  if (type == MD_BLOCK_P) {
-    auto *block = new EditorBlock(doc);
-    doc->m_blockStack.push(block);
-    qobject_cast<QVBoxLayout *>(doc->layout())
-        ->insertWidget(doc->layout()->count() - 1, block);
+
+  if (type == MD_BLOCK_DOC) {
+    doc->m_blockStack.push(nullptr);
     return 0;
   }
-  doc->m_blockStack.push(nullptr);
+
+  EditorBlock *parentBlock =
+      doc->m_blockStack.isEmpty() ? nullptr : doc->m_blockStack.top();
+  EditorBlock *block = nullptr;
+
+  switch (type) {
+  case MD_BLOCK_QUOTE:
+    block = new EditorMultiLineBlock(doc);
+    block->setMargins(QMargins(24, 4, 8, 4));
+    break;
+
+  case MD_BLOCK_UL: {
+    auto *ulDetail = static_cast<MD_BLOCK_UL_DETAIL *>(detail);
+    block = new EditorListBlock(EditorListBlock::Unordered, doc);
+    if (ulDetail->is_tight)
+      block->setMargins(QMargins(16, 0, 8, 0));
+    break;
+  }
+
+  case MD_BLOCK_OL: {
+    auto *olDetail = static_cast<MD_BLOCK_OL_DETAIL *>(detail);
+    block = new EditorListBlock(EditorListBlock::Ordered, doc);
+    if (olDetail->is_tight)
+      block->setMargins(QMargins(16, 0, 8, 0));
+    break;
+  }
+
+  case MD_BLOCK_LI:
+    block = new EditorListItemBlock(doc);
+    break;
+
+  case MD_BLOCK_HR:
+    block = new EditorHrBlock(doc);
+    addBlockToParent(block, doc, parentBlock);
+    doc->m_blockStack.push(block);
+    return 0;
+
+  case MD_BLOCK_H: {
+    auto *hDetail = static_cast<MD_BLOCK_H_DETAIL *>(detail);
+    block = new EditorHeadingBlock(hDetail->level, doc);
+    break;
+  }
+
+  case MD_BLOCK_CODE:
+    block = new EditorCodeBlock(doc);
+    break;
+
+  case MD_BLOCK_HTML:
+    block = new EditorBlock(doc);
+    break;
+
+  case MD_BLOCK_P:
+    block = new EditorBlock(doc);
+    break;
+
+  case MD_BLOCK_TABLE:
+    block = new EditorTableBlock(doc);
+    break;
+
+  case MD_BLOCK_THEAD:
+    block = new EditorMultiLineBlock(doc);
+    block->setMargins(QMargins(0, 0, 0, 0));
+    break;
+
+  case MD_BLOCK_TBODY:
+    block = new EditorMultiLineBlock(doc);
+    block->setMargins(QMargins(0, 0, 0, 0));
+    break;
+
+  case MD_BLOCK_TR:
+    block = new EditorMultiLineBlock(doc);
+    block->setMargins(QMargins(0, 0, 0, 0));
+    break;
+
+  case MD_BLOCK_TH:
+    block = new EditorTableCellBlock(true, doc);
+    break;
+
+  case MD_BLOCK_TD:
+    block = new EditorTableCellBlock(false, doc);
+    break;
+
+  case MD_BLOCK_FOOTNOTE_DEF_SECTION:
+    block = new EditorMultiLineBlock(doc);
+    block->setMargins(QMargins(8, 12, 8, 4));
+    break;
+
+  case MD_BLOCK_FOOTNOTE_DEF:
+    block = new EditorMultiLineBlock(doc);
+    block->setMargins(QMargins(16, 2, 8, 2));
+    break;
+
+  case MD_BLOCK_ADMONITION: {
+    auto *admDetail = static_cast<MD_BLOCK_ADMONITION_DETAIL *>(detail);
+    QString type =
+        QString::fromUtf8(admDetail->type.text, admDetail->type.size);
+    block = new EditorAdmonitionBlock(type, doc);
+    break;
+  }
+  }
+
+  addBlockToParent(block, doc, parentBlock);
+  doc->m_blockStack.push(block);
   return 0;
 }
 
 int EditorDocument::leaveBlock(MD_BLOCKTYPE type, void *detail,
                                void *userdata) {
   auto *doc = static_cast<EditorDocument *>(userdata);
+  EditorBlock *block =
+      doc->m_blockStack.isEmpty() ? nullptr : doc->m_blockStack.top();
   doc->m_blockStack.pop();
+
+  if (block && type != MD_BLOCK_HR)
+    block->relayoutFragments();
+
   return 0;
 }
 
@@ -176,9 +291,19 @@ int EditorDocument::textCallback(MD_TEXTTYPE type, const MD_CHAR *text,
     auto *frag = new EditorTextFragment(block);
     QString str = QString::fromUtf8(text, size);
     frag->setText(str);
-    frag->setCharFormat(doc->m_formatStack.isEmpty()
-                            ? QTextCharFormat()
-                            : doc->m_formatStack.top());
+
+    QTextCharFormat fmt = doc->m_formatStack.isEmpty()
+                              ? QTextCharFormat()
+                              : doc->m_formatStack.top();
+
+    auto *headingBlock = qobject_cast<EditorHeadingBlock *>(block);
+    if (headingBlock) {
+      fmt.setFont(headingBlock->headingFont());
+    } else if (qobject_cast<EditorCodeBlock *>(block)) {
+      fmt.setFontFamilies({"monospace"});
+    }
+
+    frag->setCharFormat(fmt);
     frag->show();
     break;
   }
@@ -226,8 +351,8 @@ void EditorDocument::setMarkdown(const QString &markdown) {
   QByteArray utf8 = markdown.toUtf8();
   md_parse(utf8.constData(), utf8.size(), &parser, this);
 
-  updateGeometry();
-  const auto &remainingBlocks = findChildren<EditorBlock *>();
-  for (auto *block : remainingBlocks)
+  const auto &topBlocks =
+      findChildren<EditorBlock *>(QString(), Qt::FindDirectChildrenOnly);
+  for (auto *block : topBlocks)
     block->relayoutFragments();
 }
