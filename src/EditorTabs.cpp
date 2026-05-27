@@ -95,19 +95,20 @@ Editor *EditorTabs::addEditorTab(const QString &title, int &index) {
   auto *editor = new Editor(this);
   index = addTab(editor, title.isEmpty() ? tr("Untitled") : title);
 
-  connect(editor, &Editor::closed, this, [this, editor](EditorCloseRequest req) {
-    int idx = indexOf(editor);
-    if (idx >= 0)
-      removeTab(idx);
-    if (count() == 0) {
-      if (req == EditorCloseRequest::Exit)
-        qApp->quit();
-      else
-        newDocument();
-    }
-  });
+  connect(editor, &Editor::closed, this,
+          [this, editor](EditorCloseRequest req) {
+            int idx = indexOf(editor);
+            if (idx >= 0)
+              removeTab(idx);
+            if (count() == 0) {
+              if (req == EditorCloseRequest::Exit)
+                qApp->quit();
+              else
+                newDocument();
+            }
+          });
 
-  connect(editor->document(), &QTextDocument::modificationChanged, this,
+  connect(editor->document(), &EditorDocument::modificationChanged, this,
           [this, editor](bool modified) {
             int idx = indexOf(editor);
             if (idx < 0)

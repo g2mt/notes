@@ -7,14 +7,66 @@
 
 class QMimeData;
 
+class Editor;
 enum class EditorCloseRequest { Normal, Exit };
 
-class Editor : public QTextEdit {
+class EditorDocument : public QWidget {
+  Q_OBJECT
+
+public:
+  explicit EditorDocument(Editor *parent = nullptr);
+
+  bool isEmpty() const;
+  bool isModified() const;
+
+signals:
+  void modificationChanged(bool);
+
+public slots:
+  void setModified(bool);
+
+private:
+  bool m_modified = false;
+};
+
+class Editor : public QWidget {
   Q_OBJECT
 
 public:
   explicit Editor(QWidget *parent = nullptr);
   ~Editor();
+
+  EditorDocument *document() const;
+
+  bool isBold() const;
+  bool isItalic() const;
+  bool isUnderline() const;
+  bool isStrikethrough() const;
+  bool isSuperscript() const;
+  bool isSubscript() const;
+
+  bool isUndoAvailable() const;
+  bool isRedoAvailable() const;
+
+  const QString &filePath() const;
+  void setFilePath(const QString &path);
+
+protected:
+  void focusInEvent(QFocusEvent *event) override;
+
+signals:
+  void formattingChanged();
+  void closed(EditorCloseRequest req);
+  void undoAvailable(bool);
+  void redoAvailable(bool);
+
+public slots:
+  void clear();
+  void copy();
+  void cut();
+  void paste();
+  void undo();
+  void redo();
 
   void setBold(bool bold);
   void setItalic(bool italic);
@@ -22,31 +74,21 @@ public:
   void setStrikethrough(bool strike);
   void setSuperscript(bool super);
   void setSubscript(bool sub);
-
-  bool isBold() const;
-  bool isItalic() const;
-  bool isUnderline() const;
-
   void wrapHeading(int level);
   void clearHeading();
 
   void insertOrderedList();
   void insertUnorderedList();
-
   void insertTable(int rows, int cols);
+  void insertPlainText(const QString &text);
+  void insertFromMimeData(const QMimeData *source);
 
-  void insertFromMimeData(const QMimeData *source) override;
-  void focusInEvent(QFocusEvent *event) override;
+  void removeSelectedText();
 
-  const QString &filePath() const;
-  void setFilePath(const QString &path);
+  void setMarkdown(const QString &text);
 
   bool save(const QString &path = QString());
   void close(EditorCloseRequest req = EditorCloseRequest::Normal);
-
-signals:
-  void formattingChanged();
-  void closed(EditorCloseRequest req);
 
 private:
   bool hasFileChangedExternally() const;

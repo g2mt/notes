@@ -344,29 +344,27 @@ void MainWindow::connectEditorSignals(Editor *editor) {
     m_saveAsAction->setEnabled(true);
 
     // Edit menu
-    m_editor.connections.append(connect(editor, &QTextEdit::undoAvailable,
-                                        m_undoAction, &QAction::setEnabled));
-    m_editor.connections.append(connect(editor, &QTextEdit::redoAvailable,
-                                        m_redoAction, &QAction::setEnabled));
-    m_editor.connections.append(
-        connect(m_undoAction, &QAction::triggered, editor, &QTextEdit::undo));
-    m_editor.connections.append(
-        connect(m_redoAction, &QAction::triggered, editor, &QTextEdit::redo));
-    m_editor.connections.append(
-        connect(m_cutAction, &QAction::triggered, editor, &QTextEdit::cut));
-    m_editor.connections.append(
-        connect(m_copyAction, &QAction::triggered, editor, &QTextEdit::copy));
-    m_editor.connections.append(
-        connect(m_pasteAction, &QAction::triggered, editor, &QTextEdit::paste));
-    m_editor.connections.append(
-        connect(m_pastePlainAction, &QAction::triggered, editor, [editor]() {
-          editor->insertPlainText(QApplication::clipboard()->text());
-        }));
-    m_editor.connections.append(
+    m_editor.connections = {
+        connect(editor, &Editor::undoAvailable, m_undoAction,
+                &QAction::setEnabled),
+        connect(editor, &Editor::redoAvailable, m_redoAction,
+                &QAction::setEnabled),
+
+        connect(m_undoAction, &QAction::triggered, editor, &Editor::undo),
+        connect(m_redoAction, &QAction::triggered, editor, &Editor::redo),
+        connect(m_cutAction, &QAction::triggered, editor, &Editor::cut),
+        connect(m_copyAction, &QAction::triggered, editor, &Editor::copy),
+        connect(m_pasteAction, &QAction::triggered, editor, &Editor::paste),
+        connect(m_pastePlainAction, &QAction::triggered, editor,
+                [editor]() {
+                  editor->insertPlainText(QApplication::clipboard()->text());
+                }),
+
         connect(m_deleteAction, &QAction::triggered, editor,
-                [editor]() { editor->textCursor().removeSelectedText(); }));
-    m_undoAction->setEnabled(editor->document()->isUndoAvailable());
-    m_redoAction->setEnabled(editor->document()->isRedoAvailable());
+                [editor]() { editor->removeSelectedText(); }),
+    };
+    m_undoAction->setEnabled(editor->isUndoAvailable());
+    m_redoAction->setEnabled(editor->isRedoAvailable());
   } else {
     // File
     m_saveAction->setEnabled(false);

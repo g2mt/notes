@@ -1,3 +1,4 @@
+#if 0
 #include "notes/Editor.h"
 
 #include <QFile>
@@ -320,3 +321,4 @@ void Editor::focusInEvent(QFocusEvent *event) {
 
   QTextEdit::focusInEvent(event);
 }
+#endif
