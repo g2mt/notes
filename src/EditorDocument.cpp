@@ -5,6 +5,15 @@
 #include <QResizeEvent>
 #include <QVBoxLayout>
 
+// Uncomment to enable md4c traversal debug output
+//#define MD_TRACE_ENABLED
+
+#ifdef MD_TRACE_ENABLED
+#  define MD_TRACE qDebug()
+#else
+#  define MD_TRACE QNoDebug()
+#endif
+
 static const char *kBlockTypeNames[] = {
     [MD_BLOCK_DOC] = "MD_BLOCK_DOC",
     [MD_BLOCK_QUOTE] = "MD_BLOCK_QUOTE",
@@ -184,19 +193,19 @@ void EditorDocument::setMarkdown(const QString &markdown) {
                  MD_FLAG_TABLES | MD_FLAG_UNDERLINE | MD_FLAG_SUPERSCRIPTS |
                  MD_FLAG_SUBSCRIPTS;
   parser.enter_block = [](MD_BLOCKTYPE type, void *detail, void *userdata) {
-    qDebug() << "enter_block" << kBlockTypeNames[type];
+    MD_TRACE << "enter_block" << kBlockTypeNames[type];
     return EditorDocument::enterBlock(type, detail, userdata);
   };
   parser.leave_block = [](MD_BLOCKTYPE type, void *detail, void *userdata) {
-    qDebug() << "leave_block" << kBlockTypeNames[type];
+    MD_TRACE << "leave_block" << kBlockTypeNames[type];
     return EditorDocument::leaveBlock(type, detail, userdata);
   };
   parser.enter_span = [](MD_SPANTYPE type, void *detail, void *userdata) {
-    qDebug() << "enter_span" << kSpanTypeNames[type];
+    MD_TRACE << "enter_span" << kSpanTypeNames[type];
     return EditorDocument::enterSpan(type, detail, userdata);
   };
   parser.leave_span = [](MD_SPANTYPE type, void *detail, void *userdata) {
-    qDebug() << "leave_span" << kSpanTypeNames[type];
+    MD_TRACE << "leave_span" << kSpanTypeNames[type];
     return EditorDocument::leaveSpan(type, detail, userdata);
   };
   parser.text = [](MD_TEXTTYPE type, const MD_CHAR *text, MD_SIZE size,
