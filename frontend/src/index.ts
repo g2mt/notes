@@ -1,35 +1,22 @@
-import { EditorState } from "prosemirror-state";
-import { EditorView } from "prosemirror-view";
-import { keymap } from "prosemirror-keymap";
-import { baseKeymap } from "prosemirror-commands";
-import { history } from "prosemirror-history";
-import { dropCursor } from "prosemirror-dropcursor";
-import { gapCursor } from "prosemirror-gapcursor";
-import { tableEditing, columnResizing } from "prosemirror-tables";
-import { schema } from "./schema";
-import { buildCommands } from "./commands";
-import { initBridge, getBridge } from "./bridge";
+import {keymap} from 'prosemirror-keymap';
+import {baseKeymap} from 'prosemirror-commands';
+import {history} from 'prosemirror-history';
+import {dropCursor} from 'prosemirror-dropcursor';
+import {gapCursor} from 'prosemirror-gapcursor';
+import {EditorState} from 'prosemirror-state';
+import {EditorView} from 'prosemirror-view';
+import {
+  schema,
+  defaultMarkdownParser,
+  defaultMarkdownSerializer,
+  MarkdownParser,
+} from 'prosemirror-markdown';
+
+import {initBridge} from './bridge';
+
+const parser = new MarkdownParser(schema, defaultMarkdownParser.tokenizer, defaultMarkdownParser.tokens);
 
 let view: EditorView;
-
-function notifyState() {
-  const b = getBridge();
-  const cmds = (window as any).proseCommands;
-  if (!b || !cmds) return;
-
-  const marks = cmds.getActiveMarks();
-  b.notifyFormattingChanged(
-    marks.bold,
-    marks.italic,
-    marks.underline,
-    marks.strikethrough,
-    marks.superscript,
-    marks.subscript
-  );
-  b.notifyModificationChanged(true);
-  b.notifyUndoAvailable(cmds.isUndoAvailable());
-  b.notifyRedoAvailable(cmds.isRedoAvailable());
-}
 
 export function createEditor(element: HTMLElement) {
   const state = EditorState.create({
@@ -39,23 +26,41 @@ export function createEditor(element: HTMLElement) {
       history(),
       dropCursor(),
       gapCursor(),
-      columnResizing(),
-      tableEditing(),
     ],
   });
 
-  view = new EditorView(element, {
-    state,
-    dispatchTransaction(tr) {
-      const newState = view.state.apply(tr);
-      view.updateState(newState);
-      notifyState();
+  view = new EditorView(element, {state});
+
+  (window as any).proseCommands = {
+    setMarkdown(md: string) {
+      const doc = parser.parse(md);
+      view.dispatch(
+        view.state.tr.replaceWith(0, view.state.doc.content.size, doc));
     },
-  });
+    getMarkdown(): string {
+      return defaultMarkdownSerializer.serialize(view.state.doc);
+    },
 
-  (window as any).proseCommands = buildCommands(() => view);
+    toggleBold() {},
+    toggleItalic() {},
+    toggleUnderline() {},
+    toggleStrikethrough() {},
+    toggleSuperscript() {},
+    toggleSubscript() {},
+    wrapHeading(_level: number) {},
+    clearHeading() {},
+    insertOrderedList() {},
+    insertUnorderedList() {},
+    insertTable(_rows: number, _cols: number) {},
+    undo() {},
+    redo() {},
+    isEmpty(): boolean { return false; },
+    isUndoAvailable(): boolean { return false; },
+    isRedoAvailable(): boolean { return false; },
+    getActiveMarks(): Record<string, boolean> {
+      return {bold: false, italic: false, underline: false, strikethrough: false, superscript: false, subscript: false};
+    },
+  };
 
-  initBridge().then(() => {
-    notifyState();
-  });
+  initBridge().then(() => {});
 }

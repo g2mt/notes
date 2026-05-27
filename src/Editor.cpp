@@ -14,6 +14,18 @@
 #include <QWebEnginePage>
 #include <QWebEngineView>
 
+void EditorPage::javaScriptConsoleMessage(
+    JavaScriptConsoleMessageLevel level, const QString &message,
+    int lineNumber, const QString &sourceID) {
+  const char *prefix = "js: ";
+  if (level == ErrorMessageLevel)
+    prefix = "js error: ";
+  else if (level == WarningMessageLevel)
+    prefix = "js warn: ";
+  qDebug().noquote()
+      << prefix << message << "\n    at" << sourceID << ":" << lineNumber;
+}
+
 ProseBridge::ProseBridge(QObject *parent) : QObject(parent) {}
 
 bool ProseBridge::isBold() const { return m_bold; }
@@ -98,6 +110,7 @@ Editor::Editor(QWidget *parent) : QWidget(parent) {
   layout->setContentsMargins(0, 0, 0, 0);
 
   m_webView = new QWebEngineView(this);
+  m_webView->setPage(new EditorPage(m_webView));
   m_channel = new QWebChannel(this);
   m_bridge = new ProseBridge(this);
 

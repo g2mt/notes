@@ -10,4 +10,5 @@ esbuild.build({
   target: "es2020",
   platform: "browser",
   minify: false,
+  sourcemap: 'inline',
 }).catch(() => process.exit(1));

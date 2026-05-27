@@ -4,10 +4,22 @@
 #include <QDateTime>
 #include <QFocusEvent>
 #include <QObject>
+#include <QWebEnginePage>
 #include <QWidget>
 
 class QWebChannel;
 class QWebEngineView;
+
+class EditorPage : public QWebEnginePage {
+  Q_OBJECT
+public:
+  using QWebEnginePage::QWebEnginePage;
+
+protected:
+  void javaScriptConsoleMessage(JavaScriptConsoleMessageLevel level,
+                                const QString &message, int lineNumber,
+                                const QString &sourceID) override;
+};
 
 class ProseBridge : public QObject {
   Q_OBJECT
