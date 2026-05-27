@@ -66,6 +66,8 @@ void EditorBlock::relayoutFragments() {
     int widgetOriginY = y;
     int maxX = x;
     int textOffset = 0;
+    int lineSubStart = 0;
+    int lineSubX = x;
 
     while (textOffset < text.length()) {
       int spaceIdx = text.indexOf(' ', textOffset);
@@ -74,11 +76,14 @@ void EditorBlock::relayoutFragments() {
       QString word = text.mid(textOffset, wordEnd - textOffset);
       int wordWidth = fm.horizontalAdvance(word);
 
-      if (x + wordWidth > availableWidth && x > m_margins.left())
+      if (x + wordWidth > availableWidth && x > m_margins.left()) {
+        subs.append({lineSubStart, textOffset,
+                     QPoint(lineSubX - widgetOriginX, y - widgetOriginY)});
         flushLine();
+        lineSubStart = textOffset;
+        lineSubX = x;
+      }
 
-      subs.append({textOffset, wordEnd,
-                   QPoint(x - widgetOriginX, y - widgetOriginY)});
       x += wordWidth;
 
       if (spaceIdx != -1) {
@@ -91,6 +96,9 @@ void EditorBlock::relayoutFragments() {
       maxX = qMax(maxX, x);
       m_lineHeight = qMax(m_lineHeight, fragLineH);
     }
+
+    subs.append({lineSubStart, textOffset,
+                 QPoint(lineSubX - widgetOriginX, y - widgetOriginY)});
 
     int widgetW = maxX - widgetOriginX;
     int widgetH = (y - widgetOriginY) + fragLineH;
