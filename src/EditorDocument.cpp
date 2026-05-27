@@ -6,12 +6,12 @@
 #include <QVBoxLayout>
 
 // Uncomment to enable md4c traversal debug output
-//#define MD_TRACE_ENABLED
+// #define MD_TRACE_ENABLED
 
 #ifdef MD_TRACE_ENABLED
-#  define MD_TRACE qDebug()
+#define MD_TRACE qDebug()
 #else
-#  define MD_TRACE QNoDebug()
+#define MD_TRACE QNoDebug()
 #endif
 
 static const char *kBlockTypeNames[] = {
@@ -161,20 +161,28 @@ int EditorDocument::textCallback(MD_TEXTTYPE type, const MD_CHAR *text,
 
   auto *block = doc->m_blockStack.top();
 
-  if (type == MD_TEXT_BR || type == MD_TEXT_SOFTBR) {
+  switch (type) {
+  case MD_TEXT_BR:
+  case MD_TEXT_SOFTBR:
     new EditorBrFragment(block);
-    return 0;
+    break;
+
+  case MD_TEXT_NORMAL:
+  case MD_TEXT_CODE:
+  case MD_TEXT_NULLCHAR:
+  case MD_TEXT_ENTITY:
+  case MD_TEXT_HTML:
+  case MD_TEXT_LATEXMATH: {
+    auto *frag = new EditorTextFragment(block);
+    QString str = QString::fromUtf8(text, size);
+    frag->setText(str);
+    frag->setCharFormat(doc->m_formatStack.isEmpty()
+                            ? QTextCharFormat()
+                            : doc->m_formatStack.top());
+    frag->show();
+    break;
   }
-
-  if (type != MD_TEXT_NORMAL)
-    return 0;
-
-  auto *frag = new EditorTextFragment(block);
-  QString str = QString::fromUtf8(text, size);
-  frag->setText(str);
-  frag->setCharFormat(doc->m_formatStack.isEmpty() ? QTextCharFormat()
-                                                   : doc->m_formatStack.top());
-  frag->show();
+  }
 
   return 0;
 }
