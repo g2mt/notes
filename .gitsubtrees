@@ -1,0 +1,4 @@
+- branch: master
+  path: vendored/md4c
+  tags: []
+  url: https://github.com/mity/md4c
