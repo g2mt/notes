@@ -99,15 +99,21 @@ int EditorDocument::leaveSpan(MD_SPANTYPE type, void *detail, void *userdata) {
 
 int EditorDocument::textCallback(MD_TEXTTYPE type, const MD_CHAR *text,
                                  MD_SIZE size, void *userdata) {
-  if (type != MD_TEXT_NORMAL)
-    return 0;
-
   auto *doc = static_cast<EditorDocument *>(userdata);
   if (doc->m_blockStack.isEmpty() || !doc->m_blockStack.top())
     return 0;
 
   auto *block = doc->m_blockStack.top();
-  auto *frag = new EditorFragment(block);
+
+  if (type == MD_TEXT_BR || type == MD_TEXT_SOFTBR) {
+    new EditorBrFragment(block);
+    return 0;
+  }
+
+  if (type != MD_TEXT_NORMAL)
+    return 0;
+
+  auto *frag = new EditorTextFragment(block);
   QString str = QString::fromUtf8(text, size);
   frag->setText(str);
   frag->setCharFormat(doc->m_formatStack.isEmpty() ? QTextCharFormat()

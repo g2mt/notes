@@ -21,20 +21,31 @@ void EditorBlock::resizeEvent(QResizeEvent *event) {
 void EditorBlock::relayoutFragments() {
   int x = m_margins.left();
   int y = m_margins.top();
-  int lineH = 0;
+  m_lineHeight = 0;
 
   const auto &children = findChildren<EditorFragment *>(QString(),
                                                         Qt::FindDirectChildrenOnly);
 
   for (auto *frag : children) {
-    int fragWidth = frag->preferredWidth();
-    int fragLineH = frag->lineHeight();
-    frag->setGeometry(x, y, fragWidth, fragLineH);
+    if (auto *br = qobject_cast<EditorBrFragment *>(frag)) {
+      x = m_margins.left();
+      y += m_lineHeight;
+      m_lineHeight = 0;
+      continue;
+    }
+
+    auto *tf = qobject_cast<EditorTextFragment *>(frag);
+    if (!tf)
+      continue;
+
+    int fragWidth = tf->preferredWidth();
+    int fragLineH = tf->lineHeight();
+    tf->setGeometry(x, y, fragWidth, fragLineH);
     x += fragWidth;
-    lineH = qMax(lineH, fragLineH);
+    m_lineHeight = qMax(m_lineHeight, fragLineH);
   }
 
-  setFixedHeight(y + lineH + m_margins.bottom());
+  setFixedHeight(y + m_lineHeight + m_margins.bottom());
 }
 
 void EditorBlock::paintEvent(QPaintEvent *event) {

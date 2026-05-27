@@ -49,6 +49,7 @@ protected:
 
   bool m_selected;
   QMargins m_margins;
+  int m_lineHeight = 0;
 };
 
 class EditorListBlock : public EditorBlock {};
@@ -56,11 +57,18 @@ class EditorTableBlock : public EditorBlock {};
 
 class EditorFragment : public EditorElement {
   Q_OBJECT
+
+public:
+  EditorFragment(QWidget *parent = nullptr);
+};
+
+class EditorTextFragment : public EditorFragment {
+  Q_OBJECT
   Q_PROPERTY(QString text READ text WRITE setText)
   Q_PROPERTY(QTextCharFormat charFormat READ charFormat WRITE setCharFormat)
 
 public:
-  EditorFragment(QWidget *parent = nullptr);
+  EditorTextFragment(QWidget *parent = nullptr);
 
   const QString &text() const;
 
@@ -89,6 +97,13 @@ private:
   int m_selectionStart = -1;
   int m_selectionEnd = -1;
   QList<EditorFragmentSub> m_subs;
+};
+
+class EditorBrFragment : public EditorFragment {
+  Q_OBJECT
+
+public:
+  EditorBrFragment(QWidget *parent = nullptr);
 };
 
 class EditorCursor : public QObject {

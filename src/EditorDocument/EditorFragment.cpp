@@ -6,47 +6,51 @@
 
 EditorFragment::EditorFragment(QWidget *parent) : EditorElement(parent) {}
 
-const QString &EditorFragment::text() const { return m_text; }
+EditorBrFragment::EditorBrFragment(QWidget *parent) : EditorFragment(parent) {}
 
-void EditorFragment::setText(QString &text) {
+EditorTextFragment::EditorTextFragment(QWidget *parent) : EditorFragment(parent) {}
+
+const QString &EditorTextFragment::text() const { return m_text; }
+
+void EditorTextFragment::setText(QString &text) {
   m_text = text;
   updateGeometry();
   update();
 }
 
-QTextCharFormat EditorFragment::charFormat() const { return m_charFormat; }
+QTextCharFormat EditorTextFragment::charFormat() const { return m_charFormat; }
 
-void EditorFragment::setCharFormat(QTextCharFormat fmt) {
+void EditorTextFragment::setCharFormat(QTextCharFormat fmt) {
   m_charFormat = fmt;
   updateGeometry();
   update();
 }
 
-int EditorFragment::selectionStart() const { return m_selectionStart; }
+int EditorTextFragment::selectionStart() const { return m_selectionStart; }
 
-int EditorFragment::selectionEnd() const { return m_selectionEnd; }
+int EditorTextFragment::selectionEnd() const { return m_selectionEnd; }
 
-int EditorFragment::widthForText(const QString &text) const {
+int EditorTextFragment::widthForText(const QString &text) const {
   QFontMetrics fm(m_charFormat.font());
   return fm.horizontalAdvance(text);
 }
 
-int EditorFragment::preferredWidth() const {
+int EditorTextFragment::preferredWidth() const {
   return widthForText(m_text);
 }
 
-int EditorFragment::lineHeight() const {
+int EditorTextFragment::lineHeight() const {
   QFontMetrics fm(m_charFormat.font());
   return fm.height();
 }
 
-QList<EditorFragmentSub> EditorFragment::subs() const { return m_subs; }
+QList<EditorFragmentSub> EditorTextFragment::subs() const { return m_subs; }
 
-void EditorFragment::setSubs(QList<EditorFragmentSub> subs) {
+void EditorTextFragment::setSubs(QList<EditorFragmentSub> subs) {
   m_subs = subs;
 }
 
-void EditorFragment::paintEvent(QPaintEvent *event) {
+void EditorTextFragment::paintEvent(QPaintEvent *event) {
   QPainter painter(this);
   painter.setFont(m_charFormat.font());
   painter.setPen(m_charFormat.foreground().color());
