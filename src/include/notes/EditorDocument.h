@@ -44,6 +44,7 @@ public:
   virtual void relayout();
   virtual void setMargins(const QMargins &margins);
 
+  bool isEmpty() const;
   void addElement(EditorElement *child);
 
 protected:
@@ -198,28 +199,23 @@ protected:
 };
 
 class Editor;
-class EditorDocument : public QWidget {
+class EditorDocument : public EditorBlock {
   Q_OBJECT
 
 public:
   explicit EditorDocument(Editor *parent = nullptr);
 
-  bool isEmpty() const;
   bool isModified() const;
   void setModified(bool);
   void setMarkdown(const QString &);
 
-  void addElement(EditorElement *child);
   QSize sizeHint() const override;
 
 signals:
   void modificationChanged(bool);
 
-protected:
-  void resizeEvent(QResizeEvent *event) override;
-
 private:
-  void relayout();
+  void relayout() override;
 
   static int enterBlock(MD_BLOCKTYPE type, void *detail, void *userdata);
   static int leaveBlock(MD_BLOCKTYPE type, void *detail, void *userdata);
@@ -232,7 +228,6 @@ private:
   EditorCursor *cursor = nullptr;
   QStack<EditorBlock *> m_blockStack;
   QStack<QTextCharFormat> m_formatStack;
-  QList<EditorElement *> m_children;
 };
 
 #endif // EDITOR_DOCUMENT_H

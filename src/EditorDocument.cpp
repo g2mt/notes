@@ -51,11 +51,11 @@ static const char *kSpanTypeNames[] = {
     [MD_SPAN_FOOTNOTE_REF] = "MD_SPAN_FOOTNOTE_REF",
 };
 
-EditorDocument::EditorDocument(Editor *parent) : QWidget(parent) {}
+EditorDocument::EditorDocument(Editor *parent) : EditorBlock(parent) {}
 
-bool EditorDocument::isEmpty() const {
-  return m_children.isEmpty();
-}
+//
+// Document State
+//
 
 bool EditorDocument::isModified() const { return m_modified; }
 
@@ -66,31 +66,20 @@ void EditorDocument::setModified(bool modified) {
   }
 }
 
-void EditorDocument::resizeEvent(QResizeEvent *event) {
-  QWidget::resizeEvent(event);
-  relayout();
-}
-
-static void addBlockToParent(EditorBlock *block, EditorDocument *doc,
-                             EditorBlock *parentBlock) {
-  if (parentBlock) {
-    parentBlock->addWidget(block);
-  } else {
-    doc->addElement(block);
-  }
-}
+//
+// Markdown Parsing
+//
 
 int EditorDocument::enterBlock(MD_BLOCKTYPE type, void *detail,
                                void *userdata) {
   auto *doc = static_cast<EditorDocument *>(userdata);
 
   if (type == MD_BLOCK_DOC) {
-    doc->m_blockStack.push(nullptr);
+    doc->m_blockStack.push(doc);
     return 0;
   }
 
-  EditorBlock *parentBlock =
-      doc->m_blockStack.isEmpty() ? nullptr : doc->m_blockStack.top();
+  auto *parentBlock = doc->m_blockStack.top();
   EditorBlock *block = nullptr;
 
   switch (type) {
@@ -121,7 +110,7 @@ int EditorDocument::enterBlock(MD_BLOCKTYPE type, void *detail,
 
   case MD_BLOCK_HR:
     block = new EditorHrBlock(doc);
-    addBlockToParent(block, doc, parentBlock);
+    parentBlock->addElement(block);
     doc->m_blockStack.push(block);
     return 0;
 
@@ -189,7 +178,7 @@ int EditorDocument::enterBlock(MD_BLOCKTYPE type, void *detail,
   }
   }
 
-  addBlockToParent(block, doc, parentBlock);
+  parentBlock->addElement(block);
   doc->m_blockStack.push(block);
   return 0;
 }
@@ -197,12 +186,11 @@ int EditorDocument::enterBlock(MD_BLOCKTYPE type, void *detail,
 int EditorDocument::leaveBlock(MD_BLOCKTYPE type, void *detail,
                                void *userdata) {
   auto *doc = static_cast<EditorDocument *>(userdata);
-  EditorBlock *block =
-      doc->m_blockStack.isEmpty() ? nullptr : doc->m_blockStack.top();
+  auto *block = doc->m_blockStack.top();
   doc->m_blockStack.pop();
 
-  if (block && type != MD_BLOCK_HR)
-    block->relayout();
+  if (type != MD_BLOCK_DOC && type != MD_BLOCK_HR)
+    static_cast<EditorBlock *>(block)->relayout();
 
   return 0;
 }
@@ -261,16 +249,13 @@ int EditorDocument::leaveSpan(MD_SPANTYPE type, void *detail, void *userdata) {
 int EditorDocument::textCallback(MD_TEXTTYPE type, const MD_CHAR *text,
                                  MD_SIZE size, void *userdata) {
   auto *doc = static_cast<EditorDocument *>(userdata);
-  if (doc->m_blockStack.isEmpty() || !doc->m_blockStack.top())
-    return 0;
-
-  auto *block = doc->m_blockStack.top();
+  auto *block = static_cast<EditorBlock *>(doc->m_blockStack.top());
 
   switch (type) {
   case MD_TEXT_BR:
   case MD_TEXT_SOFTBR: {
     auto *frag = new EditorBrFragment(block);
-    block->addWidget(frag);
+    block->addElement(frag);
     break;
   }
 
@@ -296,7 +281,7 @@ int EditorDocument::textCallback(MD_TEXTTYPE type, const MD_CHAR *text,
     }
 
     frag->setCharFormat(fmt);
-    block->addWidget(frag);
+    block->addElement(frag);
     break;
   }
   }
@@ -347,11 +332,9 @@ void EditorDocument::setMarkdown(const QString &markdown) {
   relayout();
 }
 
-void EditorDocument::addElement(EditorElement *child) {
-  child->setParent(this);
-  m_children.append(child);
-  child->show();
-}
+//
+// Layout
+//
 
 QSize EditorDocument::sizeHint() const {
   int totalHeight = 0;

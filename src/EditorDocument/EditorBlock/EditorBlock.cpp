@@ -18,7 +18,9 @@ QSize EditorBlock::sizeHint() const {
   return QSize(width(), bottom);
 }
 
-void EditorBlock::addWidget(EditorElement *child) {
+bool EditorBlock::isEmpty() const { return m_children.isEmpty(); }
+
+void EditorBlock::addElement(EditorElement *child) {
   child->setParent(this);
   m_children.append(child);
   child->show();
