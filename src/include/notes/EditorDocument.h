@@ -45,7 +45,7 @@ private:
                           void *userdata);
 
   bool m_modified = false;
-  EditorCursor *cursor = nullptr;
+  EditorCursor *m_cursor = nullptr;
   QStack<EditorBlock *> m_blockStack;
   QStack<QTextCharFormat> m_formatStack;
 };
