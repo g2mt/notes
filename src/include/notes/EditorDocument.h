@@ -63,17 +63,12 @@ public:
   QSize sizeHint() const override;
   void addWidget(EditorBlock *child) override;
   void setMargins(const QMargins &margins) override;
-  void relayout() override;
-
-protected:
-  void resizeEvent(QResizeEvent *event) override;
 };
 
 class EditorListItemBlock : public EditorBlock {
 public:
   EditorListItemBlock(QWidget *parent = nullptr);
   void addWidget(EditorBlock *child) override;
-  void relayout() override;
 };
 
 class EditorListBlock : public EditorMultiLineBlock {

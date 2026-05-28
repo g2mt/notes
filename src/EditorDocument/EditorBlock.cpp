@@ -5,6 +5,7 @@
 #include <QPainter>
 #include <QResizeEvent>
 #include <QVBoxLayout>
+#include <qnamespace.h>
 
 EditorBlock::EditorBlock(QWidget *parent)
     : EditorElement(parent), m_selected(false), m_margins(8, 4, 8, 4) {}
@@ -46,16 +47,18 @@ void EditorBlock::relayout() {
   for (auto *child : children) {
     auto *block = qobject_cast<EditorBlock *>(child);
     if (block) {
-      if (x > m_margins.left())
-        flushLine();
+      flushLine();
+
       block->relayout();
       int blockW = width() - m_margins.left() - m_margins.right();
       if (blockW < 0)
         blockW = 0;
       int blockH = block->sizeHint().height();
-      qDebug() << block << blockH;
       block->setGeometry(m_margins.left(), y, blockW, blockH);
+
+      x = m_margins.left();
       y += blockH;
+      m_lineHeight = 0;
       continue;
     }
 
@@ -167,16 +170,6 @@ void EditorMultiLineBlock::setMargins(const QMargins &margins) {
       margins.left(), margins.top(), margins.right(), margins.bottom());
 }
 
-void EditorMultiLineBlock::relayout() { updateGeometry(); }
-
-void EditorMultiLineBlock::resizeEvent(QResizeEvent *event) {
-  relayout();
-  const auto &blocks =
-      findChildren<EditorBlock *>(QString(), Qt::FindDirectChildrenOnly);
-  for (auto *block : blocks)
-    block->relayout();
-}
-
 EditorListItemBlock::EditorListItemBlock(QWidget *parent)
     : EditorBlock(parent) {
   auto *layout = new QVBoxLayout(this);
@@ -189,18 +182,6 @@ EditorListItemBlock::EditorListItemBlock(QWidget *parent)
 void EditorListItemBlock::addWidget(EditorBlock *child) {
   auto *l = qobject_cast<QVBoxLayout *>(layout());
   l->addWidget(child);
-}
-
-void EditorListItemBlock::relayout() {
-  EditorBlock::relayout();
-
-  auto *l = qobject_cast<QVBoxLayout *>(layout());
-  int fragmentHeight = height() - m_margins.top() - m_margins.bottom();
-  if (fragmentHeight < 0)
-    fragmentHeight = 0;
-
-  l->setContentsMargins(m_margins.left(), m_margins.top() + fragmentHeight,
-                        m_margins.right(), m_margins.bottom());
 }
 
 EditorListBlock::EditorListBlock(Type type, QWidget *parent)
