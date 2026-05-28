@@ -61,6 +61,17 @@ static const char *kSpanTypeNames[] = {
     [MD_SPAN_FOOTNOTE_REF] = "MD_SPAN_FOOTNOTE_REF",
 };
 
+static const char *kTextTypeNames[] = {
+    [MD_TEXT_NORMAL] = "MD_TEXT_NORMAL",
+    [MD_TEXT_NULLCHAR] = "MD_TEXT_NULLCHAR",
+    [MD_TEXT_BR] = "MD_TEXT_BR",
+    [MD_TEXT_SOFTBR] = "MD_TEXT_SOFTBR",
+    [MD_TEXT_ENTITY] = "MD_TEXT_ENTITY",
+    [MD_TEXT_CODE] = "MD_TEXT_CODE",
+    [MD_TEXT_HTML] = "MD_TEXT_HTML",
+    [MD_TEXT_LATEXMATH] = "MD_TEXT_LATEXMATH",
+};
+
 EditorDocument::EditorDocument(Editor *parent) : EditorBlock(parent) {}
 
 //
@@ -273,8 +284,44 @@ int EditorDocument::textCallback(MD_TEXTTYPE type, const MD_CHAR *text,
     break;
   }
 
+  case MD_TEXT_CODE: {
+    bool inInlineCode = !qobject_cast<EditorCodeBlock *>(block);
+
+    QTextCharFormat fmt = doc->m_formatStack.isEmpty()
+                              ? QTextCharFormat()
+                              : doc->m_formatStack.top();
+
+    auto *headingBlock = qobject_cast<EditorHeadingBlock *>(block);
+    if (headingBlock) {
+      fmt.setFont(headingBlock->headingFont());
+    }
+
+    if (inInlineCode) {
+      QString str = QString::fromUtf8(text, size);
+      QStringList lines = str.split('\n');
+      for (int i = 0; i < lines.size(); ++i) {
+        if (i > 0) {
+          auto *br = new EditorBrFragment(block);
+          block->addElement(br);
+        }
+        auto *frag = new EditorTextFragment(block);
+        frag->setText(lines[i]);
+        frag->setCharFormat(fmt);
+        block->addElement(frag);
+      }
+    } else {
+      auto *frag = new EditorTextFragment(block);
+      QString str = QString::fromUtf8(text, size);
+      str = str.replace("\n", "");
+      frag->setText(str);
+      fmt.setFontFamilies({"monospace"});
+      frag->setCharFormat(fmt);
+      block->addElement(frag);
+    }
+    break;
+  }
+
   case MD_TEXT_NORMAL:
-  case MD_TEXT_CODE:
   case MD_TEXT_NULLCHAR:
   case MD_TEXT_ENTITY:
   case MD_TEXT_HTML:
@@ -335,6 +382,7 @@ void EditorDocument::setMarkdown(const QString &markdown) {
   };
   parser.text = [](MD_TEXTTYPE type, const MD_CHAR *text, MD_SIZE size,
                    void *userdata) {
+    MD_TRACE << "text" << kTextTypeNames[type];
     return EditorDocument::textCallback(type, text, size, userdata);
   };
   parser.debug_log = nullptr;
