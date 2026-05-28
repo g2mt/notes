@@ -1,5 +1,15 @@
 #include "notes/EditorDocument.h"
 #include "notes/Editor.h"
+#include "notes/blocks/EditorAdmonitionBlock.h"
+#include "notes/blocks/EditorCodeBlock.h"
+#include "notes/blocks/EditorHeadingBlock.h"
+#include "notes/blocks/EditorHrBlock.h"
+#include "notes/blocks/EditorListBlock.h"
+#include "notes/blocks/EditorListItemBlock.h"
+#include "notes/blocks/EditorTableBlock.h"
+#include "notes/blocks/EditorTableCellBlock.h"
+#include "notes/fragments/EditorBrFragment.h"
+#include "notes/fragments/EditorTextFragment.h"
 
 #include <QResizeEvent>
 

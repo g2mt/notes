@@ -1,4 +1,4 @@
-#include "notes/EditorDocument.h"
+#include "notes/EditorElement.h"
 
 EditorElement::EditorElement(QWidget *parent) : QWidget(parent) {}
 

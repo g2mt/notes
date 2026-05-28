@@ -27,19 +27,19 @@ add_executable(notes
     src/Editor.cpp
     src/EditorDocument.cpp
     src/EditorDocument/EditorElement.cpp
-    src/EditorDocument/EditorBlock/EditorBlock.cpp
-    src/EditorDocument/EditorBlock/EditorListItemBlock.cpp
-    src/EditorDocument/EditorBlock/EditorListBlock.cpp
-    src/EditorDocument/EditorBlock/EditorTableCellBlock.cpp
-    src/EditorDocument/EditorBlock/EditorTableBlock.cpp
-    src/EditorDocument/EditorBlock/EditorHrBlock.cpp
-    src/EditorDocument/EditorBlock/EditorHeadingBlock.cpp
-    src/EditorDocument/EditorBlock/EditorCodeBlock.cpp
-    src/EditorDocument/EditorBlock/EditorAdmonitionBlock.cpp
-    src/EditorDocument/EditorFragment/EditorFragment.cpp
-    src/EditorDocument/EditorFragment/EditorBrFragment.cpp
-    src/EditorDocument/EditorFragment/EditorTextFragment.cpp
     src/EditorDocument/EditorCursor.cpp
+    src/blocks/EditorBlock.cpp
+    src/blocks/EditorListItemBlock.cpp
+    src/blocks/EditorListBlock.cpp
+    src/blocks/EditorTableCellBlock.cpp
+    src/blocks/EditorTableBlock.cpp
+    src/blocks/EditorHrBlock.cpp
+    src/blocks/EditorHeadingBlock.cpp
+    src/blocks/EditorCodeBlock.cpp
+    src/blocks/EditorAdmonitionBlock.cpp
+    src/fragments/EditorFragment.cpp
+    src/fragments/EditorBrFragment.cpp
+    src/fragments/EditorTextFragment.cpp
     src/EditorTabs.cpp
     src/DocumentManager.cpp
     src/FileTree.cpp
@@ -50,11 +50,18 @@ add_executable(notes
     src/include/notes/DocumentManager.h
     src/include/notes/Editor.h
     src/include/notes/EditorDocument.h
+    src/include/notes/EditorElement.h
     src/include/notes/EditorTabs.h
     src/include/notes/FileTree.h
     src/include/notes/MainWindow.h
     src/include/notes/SideBar.h
     src/include/notes/TablePopup.h
+    src/include/notes/blocks/EditorBlock.h
+    src/include/notes/blocks/EditorHeadingBlock.h
+    src/include/notes/blocks/EditorCodeBlock.h
+    src/include/notes/fragments/EditorFragment.h
+    src/include/notes/fragments/EditorBrFragment.h
+    src/include/notes/fragments/EditorTextFragment.h
 )
 
 target_include_directories(notes PRIVATE
