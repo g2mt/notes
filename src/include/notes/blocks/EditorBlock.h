@@ -29,7 +29,6 @@ protected:
 
   bool m_selected;
   QMargins m_margins;
-  int m_lineHeight = 0;
   QList<EditorElement *> m_elements;
 };
 
