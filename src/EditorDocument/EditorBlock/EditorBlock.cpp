@@ -4,7 +4,6 @@
 #include <QPaintEvent>
 #include <QPainter>
 #include <QResizeEvent>
-#include <QVBoxLayout>
 #include <qnamespace.h>
 
 EditorBlock::EditorBlock(QWidget *parent)
@@ -19,8 +18,9 @@ QSize EditorBlock::sizeHint() const {
   return QSize(width(), bottom);
 }
 
-void EditorBlock::addWidget(EditorBlock *child) {
+void EditorBlock::addWidget(EditorElement *child) {
   child->setParent(this);
+  m_children.append(child);
   child->show();
 }
 
@@ -41,8 +41,7 @@ void EditorBlock::relayout() {
     m_lineHeight = 0;
   };
 
-  const auto &children =
-      findChildren<EditorElement *>(QString(), Qt::FindDirectChildrenOnly);
+  const auto &children = m_children;
 
   for (auto *child : children) {
     auto *block = qobject_cast<EditorBlock *>(child);

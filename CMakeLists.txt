@@ -28,7 +28,6 @@ add_executable(notes
     src/EditorDocument.cpp
     src/EditorDocument/EditorElement.cpp
     src/EditorDocument/EditorBlock/EditorBlock.cpp
-    src/EditorDocument/EditorBlock/EditorMultiLineBlock.cpp
     src/EditorDocument/EditorBlock/EditorListItemBlock.cpp
     src/EditorDocument/EditorBlock/EditorListBlock.cpp
     src/EditorDocument/EditorBlock/EditorTableCellBlock.cpp

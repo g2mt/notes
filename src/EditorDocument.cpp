@@ -1,9 +1,7 @@
 #include "notes/EditorDocument.h"
 #include "notes/Editor.h"
 
-#include <QLayout>
 #include <QResizeEvent>
-#include <QVBoxLayout>
 
 // Uncomment to enable md4c traversal debug output
 #define MD_TRACE_ENABLED
@@ -53,16 +51,10 @@ static const char *kSpanTypeNames[] = {
     [MD_SPAN_FOOTNOTE_REF] = "MD_SPAN_FOOTNOTE_REF",
 };
 
-EditorDocument::EditorDocument(Editor *parent) : QWidget(parent) {
-  auto *layout = new QVBoxLayout(this);
-  layout->setContentsMargins(0, 0, 0, 0);
-  layout->setSpacing(0);
-  layout->setAlignment(Qt::AlignTop);
-  setLayout(layout);
-}
+EditorDocument::EditorDocument(Editor *parent) : QWidget(parent) {}
 
 bool EditorDocument::isEmpty() const {
-  return findChildren<EditorBlock *>().isEmpty();
+  return m_children.isEmpty();
 }
 
 bool EditorDocument::isModified() const { return m_modified; }
@@ -76,9 +68,7 @@ void EditorDocument::setModified(bool modified) {
 
 void EditorDocument::resizeEvent(QResizeEvent *event) {
   QWidget::resizeEvent(event);
-  const auto &blocks = findChildren<EditorBlock *>();
-  for (auto *block : blocks)
-    block->relayout();
+  relayout();
 }
 
 static void addBlockToParent(EditorBlock *block, EditorDocument *doc,
@@ -86,8 +76,7 @@ static void addBlockToParent(EditorBlock *block, EditorDocument *doc,
   if (parentBlock) {
     parentBlock->addWidget(block);
   } else {
-    auto *layout = qobject_cast<QVBoxLayout *>(doc->layout());
-    layout->addWidget(block);
+    doc->addElement(block);
   }
 }
 
@@ -106,7 +95,7 @@ int EditorDocument::enterBlock(MD_BLOCKTYPE type, void *detail,
 
   switch (type) {
   case MD_BLOCK_QUOTE:
-    block = new EditorMultiLineBlock(doc);
+    block = new EditorBlock(doc);
     block->setMargins(QMargins(24, 4, 8, 4));
     break;
 
@@ -159,17 +148,17 @@ int EditorDocument::enterBlock(MD_BLOCKTYPE type, void *detail,
     break;
 
   case MD_BLOCK_THEAD:
-    block = new EditorMultiLineBlock(doc);
+    block = new EditorBlock(doc);
     block->setMargins(QMargins(0, 0, 0, 0));
     break;
 
   case MD_BLOCK_TBODY:
-    block = new EditorMultiLineBlock(doc);
+    block = new EditorBlock(doc);
     block->setMargins(QMargins(0, 0, 0, 0));
     break;
 
   case MD_BLOCK_TR:
-    block = new EditorMultiLineBlock(doc);
+    block = new EditorBlock(doc);
     block->setMargins(QMargins(0, 0, 0, 0));
     break;
 
@@ -182,12 +171,12 @@ int EditorDocument::enterBlock(MD_BLOCKTYPE type, void *detail,
     break;
 
   case MD_BLOCK_FOOTNOTE_DEF_SECTION:
-    block = new EditorMultiLineBlock(doc);
+    block = new EditorBlock(doc);
     block->setMargins(QMargins(8, 12, 8, 4));
     break;
 
   case MD_BLOCK_FOOTNOTE_DEF:
-    block = new EditorMultiLineBlock(doc);
+    block = new EditorBlock(doc);
     block->setMargins(QMargins(16, 2, 8, 2));
     break;
 
@@ -279,9 +268,11 @@ int EditorDocument::textCallback(MD_TEXTTYPE type, const MD_CHAR *text,
 
   switch (type) {
   case MD_TEXT_BR:
-  case MD_TEXT_SOFTBR:
-    new EditorBrFragment(block);
+  case MD_TEXT_SOFTBR: {
+    auto *frag = new EditorBrFragment(block);
+    block->addWidget(frag);
     break;
+  }
 
   case MD_TEXT_NORMAL:
   case MD_TEXT_CODE:
@@ -305,7 +296,7 @@ int EditorDocument::textCallback(MD_TEXTTYPE type, const MD_CHAR *text,
     }
 
     frag->setCharFormat(fmt);
-    frag->show();
+    block->addWidget(frag);
     break;
   }
   }
@@ -318,6 +309,7 @@ void EditorDocument::setMarkdown(const QString &markdown) {
   for (auto *block : blocks) {
     block->deleteLater();
   }
+  m_children.clear();
   m_blockStack.clear();
   m_formatStack.clear();
 
@@ -352,8 +344,33 @@ void EditorDocument::setMarkdown(const QString &markdown) {
   QByteArray utf8 = markdown.toUtf8();
   md_parse(utf8.constData(), utf8.size(), &parser, this);
 
-  const auto &topBlocks =
-      findChildren<EditorBlock *>(QString(), Qt::FindDirectChildrenOnly);
-  for (auto *block : topBlocks)
+  relayout();
+}
+
+void EditorDocument::addElement(EditorElement *child) {
+  child->setParent(this);
+  m_children.append(child);
+  child->show();
+}
+
+QSize EditorDocument::sizeHint() const {
+  int totalHeight = 0;
+  for (auto *child : m_children)
+    totalHeight += child->sizeHint().height();
+  return QSize(width(), totalHeight);
+}
+
+void EditorDocument::relayout() {
+  int y = 0;
+  int w = width();
+  for (auto *child : m_children) {
+    auto *block = qobject_cast<EditorBlock *>(child);
+    if (!block)
+      continue;
     block->relayout();
+    int h = block->sizeHint().height();
+    block->setGeometry(0, y, w, h);
+    y += h;
+  }
+  setFixedHeight(y);
 }

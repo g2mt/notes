@@ -43,7 +43,8 @@ public:
 
   virtual void relayout();
   virtual void setMargins(const QMargins &margins);
-  virtual void addWidget(EditorBlock *child);
+
+  void addElement(EditorElement *child);
 
 protected:
   void resizeEvent(QResizeEvent *event) override;
@@ -52,26 +53,15 @@ protected:
   bool m_selected;
   QMargins m_margins;
   int m_lineHeight = 0;
-};
-
-class EditorMultiLineBlock : public EditorBlock {
-  Q_OBJECT
-
-public:
-  EditorMultiLineBlock(QWidget *parent = nullptr);
-
-  QSize sizeHint() const override;
-  void addWidget(EditorBlock *child) override;
-  void setMargins(const QMargins &margins) override;
+  QList<EditorElement *> m_children;
 };
 
 class EditorListItemBlock : public EditorBlock {
 public:
   EditorListItemBlock(QWidget *parent = nullptr);
-  void addWidget(EditorBlock *child) override;
 };
 
-class EditorListBlock : public EditorMultiLineBlock {
+class EditorListBlock : public EditorBlock {
 public:
   enum Type { Unordered, Ordered };
 
@@ -96,7 +86,7 @@ private:
   bool m_isHeader;
 };
 
-class EditorTableBlock : public EditorMultiLineBlock {
+class EditorTableBlock : public EditorBlock {
 public:
   EditorTableBlock(QWidget *parent = nullptr);
 };
@@ -135,7 +125,7 @@ protected:
   void paintEvent(QPaintEvent *event) override;
 };
 
-class EditorAdmonitionBlock : public EditorMultiLineBlock {
+class EditorAdmonitionBlock : public EditorBlock {
 public:
   EditorAdmonitionBlock(const QString &type, QWidget *parent = nullptr);
 
@@ -219,6 +209,9 @@ public:
   void setModified(bool);
   void setMarkdown(const QString &);
 
+  void addElement(EditorElement *child);
+  QSize sizeHint() const override;
+
 signals:
   void modificationChanged(bool);
 
@@ -226,6 +219,8 @@ protected:
   void resizeEvent(QResizeEvent *event) override;
 
 private:
+  void relayout();
+
   static int enterBlock(MD_BLOCKTYPE type, void *detail, void *userdata);
   static int leaveBlock(MD_BLOCKTYPE type, void *detail, void *userdata);
   static int enterSpan(MD_SPANTYPE type, void *detail, void *userdata);
@@ -237,6 +232,7 @@ private:
   EditorCursor *cursor = nullptr;
   QStack<EditorBlock *> m_blockStack;
   QStack<QTextCharFormat> m_formatStack;
+  QList<EditorElement *> m_children;
 };
 
 #endif // EDITOR_DOCUMENT_H
