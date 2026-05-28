@@ -25,17 +25,14 @@ void EditorBlock::addWidget(EditorBlock *child) {
 
 void EditorBlock::resizeEvent(QResizeEvent *event) {
   EditorElement::resizeEvent(event);
-  relayoutFragments();
+  relayout();
 }
 
-void EditorBlock::relayoutFragments() {
+void EditorBlock::relayout() {
   int x = m_margins.left();
   int y = m_margins.top();
   m_lineHeight = 0;
   int availableWidth = width() - m_margins.left() - m_margins.right();
-
-  const auto &children =
-      findChildren<EditorFragment *>(QString(), Qt::FindDirectChildrenOnly);
 
   auto flushLine = [&]() {
     x = m_margins.left();
@@ -43,8 +40,29 @@ void EditorBlock::relayoutFragments() {
     m_lineHeight = 0;
   };
 
-  for (auto *frag : children) {
-    if (auto *br = qobject_cast<EditorBrFragment *>(frag)) {
+  const auto &children =
+      findChildren<EditorElement *>(QString(), Qt::FindDirectChildrenOnly);
+
+  for (auto *child : children) {
+    auto *block = qobject_cast<EditorBlock *>(child);
+    if (block) {
+      if (x > m_margins.left())
+        flushLine();
+      block->relayout();
+      int blockW = width() - m_margins.left() - m_margins.right();
+      if (blockW < 0)
+        blockW = 0;
+      int blockH = block->sizeHint().height();
+      qDebug() << block << blockH;
+      block->setGeometry(m_margins.left(), y, blockW, blockH);
+      y += blockH;
+      continue;
+    }
+
+    auto *frag = qobject_cast<EditorFragment *>(child);
+    assert(frag != nullptr);
+
+    if (qobject_cast<EditorBrFragment *>(frag)) {
       flushLine();
       continue;
     }
@@ -149,14 +167,14 @@ void EditorMultiLineBlock::setMargins(const QMargins &margins) {
       margins.left(), margins.top(), margins.right(), margins.bottom());
 }
 
-void EditorMultiLineBlock::relayoutFragments() { updateGeometry(); }
+void EditorMultiLineBlock::relayout() { updateGeometry(); }
 
 void EditorMultiLineBlock::resizeEvent(QResizeEvent *event) {
-  relayoutFragments();
+  relayout();
   const auto &blocks =
       findChildren<EditorBlock *>(QString(), Qt::FindDirectChildrenOnly);
   for (auto *block : blocks)
-    block->relayoutFragments();
+    block->relayout();
 }
 
 EditorListItemBlock::EditorListItemBlock(QWidget *parent)
@@ -173,8 +191,8 @@ void EditorListItemBlock::addWidget(EditorBlock *child) {
   l->addWidget(child);
 }
 
-void EditorListItemBlock::relayoutFragments() {
-  EditorBlock::relayoutFragments();
+void EditorListItemBlock::relayout() {
+  EditorBlock::relayout();
 
   auto *l = qobject_cast<QVBoxLayout *>(layout());
   int fragmentHeight = height() - m_margins.top() - m_margins.bottom();

@@ -57,6 +57,7 @@ EditorDocument::EditorDocument(Editor *parent) : QWidget(parent) {
   auto *layout = new QVBoxLayout(this);
   layout->setContentsMargins(0, 0, 0, 0);
   layout->setSpacing(0);
+  layout->setAlignment(Qt::AlignTop);
   setLayout(layout);
 }
 
@@ -77,7 +78,7 @@ void EditorDocument::resizeEvent(QResizeEvent *event) {
   QWidget::resizeEvent(event);
   const auto &blocks = findChildren<EditorBlock *>();
   for (auto *block : blocks)
-    block->relayoutFragments();
+    block->relayout();
 }
 
 static void addBlockToParent(EditorBlock *block, EditorDocument *doc,
@@ -212,7 +213,7 @@ int EditorDocument::leaveBlock(MD_BLOCKTYPE type, void *detail,
   doc->m_blockStack.pop();
 
   if (block && type != MD_BLOCK_HR)
-    block->relayoutFragments();
+    block->relayout();
 
   return 0;
 }
@@ -354,5 +355,5 @@ void EditorDocument::setMarkdown(const QString &markdown) {
   const auto &topBlocks =
       findChildren<EditorBlock *>(QString(), Qt::FindDirectChildrenOnly);
   for (auto *block : topBlocks)
-    block->relayoutFragments();
+    block->relayout();
 }
