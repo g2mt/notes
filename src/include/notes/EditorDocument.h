@@ -32,7 +32,6 @@ signals:
 
 private:
   void applySelection();
-  QList<EditorElement *> leafElements() const;
 
   EditorDocument *m_document;
   QPoint m_selectionStart;

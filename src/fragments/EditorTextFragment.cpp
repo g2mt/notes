@@ -4,10 +4,30 @@
 #include <QPaintEvent>
 #include <QPainter>
 
+EditorTextFragmentSub::EditorTextFragmentSub(int textOffsetStart,
+                                             int textOffsetEnd,
+                                             EditorTextFragment *parent)
+    : EditorFragmentSub(parent), m_textOffsetStart(textOffsetStart),
+      m_textOffsetEnd(textOffsetEnd) {}
+
+void EditorTextFragmentSub::paintEvent(QPaintEvent *event) {
+  auto *fragment = qobject_cast<EditorTextFragment *>(parentWidget());
+  assert(fragment != nullptr);
+
+  QPainter painter(this);
+  painter.setFont(fragment->m_charFormat.font());
+  painter.setPen(fragment->m_charFormat.foreground().color());
+
+  QString chunk = fragment->m_text.mid(m_textOffsetStart,
+                                       m_textOffsetEnd - m_textOffsetStart);
+  int lineH = fragment->lineHeight();
+  painter.drawText(QPoint(0, lineH - painter.fontMetrics().descent()), chunk);
+}
+
 EditorTextFragment::EditorTextFragment(QWidget *parent)
     : EditorFragment(parent) {}
 
-EditorTextFragment::~EditorTextFragment() { qDeleteAll(m_subs); }
+EditorTextFragment::~EditorTextFragment() {}
 
 const QString &EditorTextFragment::text() const { return m_text; }
 
@@ -50,29 +70,12 @@ int EditorTextFragment::lineHeight() const {
   return fm.height();
 }
 
-const QList<EditorFragmentSub *> &EditorTextFragment::subs() const { return m_subs; }
-
-void EditorTextFragment::setSubs(QList<EditorFragmentSub *> subs) {
-  qDeleteAll(m_subs);
-  m_subs = subs;
-}
-
 void EditorTextFragment::paintEvent(QPaintEvent *event) {
+  if (!subs().isEmpty())
+    return;
+
   QPainter painter(this);
   painter.setFont(m_charFormat.font());
   painter.setPen(m_charFormat.foreground().color());
-
-  if (!m_subs.isEmpty()) {
-    int lineH = lineHeight();
-    for (const auto *sub : m_subs) {
-      QString chunk = m_text.mid(sub->textOffsetStart,
-                                 sub->textOffsetEnd - sub->textOffsetStart);
-      painter.drawText(
-          QPoint(sub->rect.x(),
-                 sub->rect.y() + lineH - painter.fontMetrics().descent()),
-          chunk);
-    }
-  } else {
-    painter.drawText(rect(), Qt::AlignLeft | Qt::AlignVCenter, m_text);
-  }
+  painter.drawText(rect(), Qt::AlignLeft | Qt::AlignVCenter, m_text);
 }

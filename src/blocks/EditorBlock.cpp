@@ -7,7 +7,6 @@
 #include <QPainter>
 #include <QResizeEvent>
 #include <qnamespace.h>
-#include <variant>
 
 //
 // Constructor / Destructor
@@ -85,22 +84,14 @@ void EditorBlock::relayout() {
   int lineHeight = 0;
   int availableWidth = width() - m_margins.left() - m_margins.right();
 
-  QList<std::variant<QWidget *, EditorFragmentSub *>> pending;
+  QList<QWidget *> pending;
 
   auto flushLine = [&]() {
     int maxH = 0;
-    for (const auto &item : pending) {
-      if (auto *w = std::get_if<QWidget *>(&item))
-        maxH = qMax(maxH, (*w)->height());
-      else if (auto *sub = std::get_if<EditorFragmentSub *>(&item))
-        maxH = qMax(maxH, (*sub)->rect.height());
-    }
-    for (auto &item : pending) {
-      if (auto *w = std::get_if<QWidget *>(&item))
-        (*w)->move((*w)->x(), y + maxH - (*w)->height());
-      else if (auto *sub = std::get_if<EditorFragmentSub *>(&item))
-        (*sub)->rect.moveTop((*sub)->rect.y() + maxH - (*sub)->rect.height());
-    }
+    for (auto *w : pending)
+      maxH = qMax(maxH, w->height());
+    for (auto *w : pending)
+      w->move(w->x(), y + maxH - w->height());
     pending.clear();
     x = m_margins.left();
     y += lineHeight;
@@ -171,10 +162,9 @@ void EditorBlock::relayout() {
           int delimWidth = fm.horizontalAdvance(delim);
 
           if (x + delimWidth > availableWidth && x > m_margins.left()) {
-            auto *sub = new EditorFragmentSub{
-                lineSubStart, textOffset,
-                QRect(lineSubX - widgetOriginX, y - widgetOriginY, 0,
-                      fragLineH)};
+            auto *sub = new EditorTextFragmentSub(lineSubStart, textOffset, tf);
+            sub->setGeometry(lineSubX - widgetOriginX, y - widgetOriginY, 0,
+                             fragLineH);
             subs.append(sub);
             pending.append(sub);
             flushLine();
@@ -189,10 +179,9 @@ void EditorBlock::relayout() {
           int wordWidth = fm.horizontalAdvance(word);
 
           if (x + wordWidth > availableWidth && x > m_margins.left()) {
-            auto *sub = new EditorFragmentSub{
-                lineSubStart, textOffset,
-                QRect(lineSubX - widgetOriginX, y - widgetOriginY, 0,
-                      fragLineH)};
+            auto *sub = new EditorTextFragmentSub(lineSubStart, textOffset, tf);
+            sub->setGeometry(lineSubX - widgetOriginX, y - widgetOriginY, 0,
+                             fragLineH);
             subs.append(sub);
             pending.append(sub);
             flushLine();
@@ -208,9 +197,9 @@ void EditorBlock::relayout() {
         lineHeight = qMax(lineHeight, fragLineH);
       }
 
-      auto *sub = new EditorFragmentSub{
-          lineSubStart, textOffset,
-          QRect(lineSubX - widgetOriginX, y - widgetOriginY, 0, fragLineH)};
+      auto *sub = new EditorTextFragmentSub(lineSubStart, textOffset, tf);
+      sub->setGeometry(lineSubX - widgetOriginX, y - widgetOriginY, 0,
+                       fragLineH);
       subs.append(sub);
       pending.append(sub);
 
