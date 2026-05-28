@@ -8,6 +8,16 @@
 #include <QResizeEvent>
 #include <qnamespace.h>
 
+static int nextWordBoundary(const QString &text, int offset) {
+  while (offset < text.length()) {
+    QChar ch = text[offset];
+    if (ch.isSpace() || ch.isPunct())
+      return offset;
+    offset++;
+  }
+  return text.length();
+}
+
 EditorBlock::EditorBlock(QWidget *parent)
     : EditorElement(parent), m_selected(false), m_margins(8, 4, 8, 4) {}
 
@@ -52,6 +62,7 @@ void EditorBlock::relayout() {
   const auto &children = m_elements;
 
   for (auto *child : children) {
+    // Nested blocks: flush any partial line, then lay out the block below
     auto *block = qobject_cast<EditorBlock *>(child);
     if (block) {
       flushLine();
@@ -72,6 +83,7 @@ void EditorBlock::relayout() {
     auto *frag = qobject_cast<EditorFragment *>(child);
     assert(frag != nullptr);
 
+    // Line break fragment: force a new line
     if (qobject_cast<EditorBrFragment *>(frag)) {
       flushLine();
       continue;
@@ -84,6 +96,7 @@ void EditorBlock::relayout() {
     int fragWidth = tf->preferredWidth();
     int fragLineH = tf->lineHeight();
 
+    // Simple case: the entire text fragment fits on the current line
     if (x + fragWidth <= availableWidth) {
       tf->setGeometry(x, y, fragWidth, fragLineH);
       tf->setSubs({});
@@ -92,6 +105,7 @@ void EditorBlock::relayout() {
       continue;
     }
 
+    // Fragment doesn't fit: wrap at word boundaries
     if (x > m_margins.left())
       flushLine();
 
@@ -107,27 +121,38 @@ void EditorBlock::relayout() {
     int lineSubX = x;
 
     while (textOffset < text.length()) {
-      int spaceIdx = text.indexOf(' ', textOffset);
-      int wordEnd = (spaceIdx == -1) ? text.length() : spaceIdx;
+      int boundary = nextWordBoundary(text, textOffset);
 
-      QString word = text.mid(textOffset, wordEnd - textOffset);
-      int wordWidth = fm.horizontalAdvance(word);
+      // Token is either a run of word chars, or a single delimiter about to
+      // be measured character by character
+      if (boundary == textOffset) {
+        QChar delim = text[textOffset];
+        int delimWidth = fm.horizontalAdvance(delim);
 
-      if (x + wordWidth > availableWidth && x > m_margins.left()) {
-        subs.append({lineSubStart, textOffset,
-                     QPoint(lineSubX - widgetOriginX, y - widgetOriginY)});
-        flushLine();
-        lineSubStart = textOffset;
-        lineSubX = x;
-      }
+        if (x + delimWidth > availableWidth && x > m_margins.left()) {
+          subs.append({lineSubStart, textOffset,
+                       QPoint(lineSubX - widgetOriginX, y - widgetOriginY)});
+          flushLine();
+          lineSubStart = textOffset;
+          lineSubX = x;
+        }
 
-      x += wordWidth;
-
-      if (spaceIdx != -1) {
-        x += fm.horizontalAdvance(' ');
-        textOffset = spaceIdx + 1;
+        x += delimWidth;
+        textOffset++;
       } else {
-        textOffset = text.length();
+        QString word = text.mid(textOffset, boundary - textOffset);
+        int wordWidth = fm.horizontalAdvance(word);
+
+        if (x + wordWidth > availableWidth && x > m_margins.left()) {
+          subs.append({lineSubStart, textOffset,
+                       QPoint(lineSubX - widgetOriginX, y - widgetOriginY)});
+          flushLine();
+          lineSubStart = textOffset;
+          lineSubX = x;
+        }
+
+        x += wordWidth;
+        textOffset = boundary;
       }
 
       maxX = qMax(maxX, x);
@@ -143,6 +168,7 @@ void EditorBlock::relayout() {
     tf->setSubs(subs);
   }
 
+  // Account for last line's height and bottom margin
   setFixedHeight(y + m_lineHeight + m_margins.bottom());
 }
 
