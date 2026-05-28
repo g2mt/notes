@@ -22,7 +22,7 @@ class MainWindow : public QMainWindow {
 
 public:
   explicit MainWindow(const QString &dirPath, const QStringList &files,
-                 QWidget *parent = nullptr);
+                      QWidget *parent = nullptr);
 
   const QDir &workDir() const;
   void setWorkDir(const QDir &dir);
