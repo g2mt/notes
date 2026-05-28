@@ -18,11 +18,15 @@ QSize EditorBlock::sizeHint() const {
   return QSize(width(), bottom);
 }
 
-bool EditorBlock::isEmpty() const { return m_children.isEmpty(); }
+bool EditorBlock::isEmpty() const { return m_elements.isEmpty(); }
+
+const QList<EditorElement *> &EditorBlock::elements() const {
+  return m_elements;
+}
 
 void EditorBlock::addElement(EditorElement *child) {
   child->setParent(this);
-  m_children.append(child);
+  m_elements.append(child);
   child->show();
 }
 
@@ -43,7 +47,7 @@ void EditorBlock::relayout() {
     m_lineHeight = 0;
   };
 
-  const auto &children = m_children;
+  const auto &children = m_elements;
 
   for (auto *child : children) {
     auto *block = qobject_cast<EditorBlock *>(child);

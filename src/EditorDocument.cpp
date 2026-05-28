@@ -132,9 +132,13 @@ int EditorDocument::enterBlock(MD_BLOCKTYPE type, void *detail,
     block = new EditorBlock(doc);
     break;
 
-  case MD_BLOCK_TABLE:
-    block = new EditorTableBlock(doc);
+  case MD_BLOCK_TABLE: {
+    auto *tableDetail = static_cast<MD_BLOCK_TABLE_DETAIL *>(detail);
+    block = new EditorTableBlock(
+        tableDetail->col_count,
+        tableDetail->head_row_count + tableDetail->body_row_count, doc);
     break;
+  }
 
   case MD_BLOCK_THEAD:
     block = new EditorBlock(doc);
@@ -294,7 +298,7 @@ void EditorDocument::setMarkdown(const QString &markdown) {
   for (auto *block : blocks) {
     block->deleteLater();
   }
-  m_children.clear();
+  m_elements.clear();
   m_blockStack.clear();
   m_formatStack.clear();
 
@@ -338,7 +342,7 @@ void EditorDocument::setMarkdown(const QString &markdown) {
 
 QSize EditorDocument::sizeHint() const {
   int totalHeight = 0;
-  for (auto *child : m_children)
+  for (auto *child : m_elements)
     totalHeight += child->sizeHint().height();
   return QSize(width(), totalHeight);
 }
@@ -346,7 +350,7 @@ QSize EditorDocument::sizeHint() const {
 void EditorDocument::relayout() {
   int y = 0;
   int w = width();
-  for (auto *child : m_children) {
+  for (auto *child : m_elements) {
     auto *block = qobject_cast<EditorBlock *>(child);
     if (!block)
       continue;

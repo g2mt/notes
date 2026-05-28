@@ -45,6 +45,8 @@ public:
   virtual void setMargins(const QMargins &margins);
 
   bool isEmpty() const;
+
+  const QList<EditorElement *> &elements() const;
   void addElement(EditorElement *child);
 
 protected:
@@ -54,7 +56,7 @@ protected:
   bool m_selected;
   QMargins m_margins;
   int m_lineHeight = 0;
-  QList<EditorElement *> m_children;
+  QList<EditorElement *> m_elements;
 };
 
 class EditorListItemBlock : public EditorBlock {
@@ -89,7 +91,16 @@ private:
 
 class EditorTableBlock : public EditorBlock {
 public:
-  EditorTableBlock(QWidget *parent = nullptr);
+  EditorTableBlock(int col, int row, QWidget *parent = nullptr);
+
+  void relayout() override;
+  void addElement(EditorElement *child) = delete;
+  void insertElement(int col, int row, EditorElement *child);
+
+private:
+  int m_colCount;
+  int m_rowCount;
+  QList<EditorElement *> m_cells; // col*row 2d array
 };
 
 class EditorHrBlock : public EditorBlock {
