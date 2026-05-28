@@ -7,12 +7,6 @@
 
 class EditorDocument;
 
-struct EditorFragmentSub {
-  int textOffsetStart;
-  int textOffsetEnd;
-  QPoint pixelOffset;
-};
-
 class EditorElement : public QWidget {
   friend class EditorDocument;
   Q_OBJECT

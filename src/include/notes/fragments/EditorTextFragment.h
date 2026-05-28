@@ -2,9 +2,16 @@
 #define EDITOR_TEXT_FRAGMENT_H
 
 #include <QList>
+#include <QRect>
 #include <QTextCharFormat>
 
 #include "notes/fragments/EditorFragment.h"
+
+struct EditorFragmentSub {
+  int textOffsetStart;
+  int textOffsetEnd;
+  QRect rect;
+};
 
 class EditorTextFragment : public EditorFragment {
   Q_OBJECT
@@ -13,6 +20,7 @@ class EditorTextFragment : public EditorFragment {
 
 public:
   EditorTextFragment(QWidget *parent = nullptr);
+  ~EditorTextFragment() override;
 
   const QString &text() const;
 
@@ -25,8 +33,8 @@ public:
   int preferredWidth() const;
   int lineHeight() const;
 
-  QList<EditorFragmentSub> subs() const;
-  void setSubs(QList<EditorFragmentSub>);
+  const QList<EditorFragmentSub *> &subs() const;
+  void setSubs(QList<EditorFragmentSub *>);
 
 public slots:
   void setText(QString &);
@@ -39,7 +47,7 @@ private:
   QTextCharFormat m_charFormat;
   int m_selectionStart = -1;
   int m_selectionEnd = -1;
-  QList<EditorFragmentSub> m_subs;
+  QList<EditorFragmentSub *> m_subs;
 };
 
 #endif // EDITOR_TEXT_FRAGMENT_H

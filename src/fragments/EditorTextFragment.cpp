@@ -7,6 +7,8 @@
 EditorTextFragment::EditorTextFragment(QWidget *parent)
     : EditorFragment(parent) {}
 
+EditorTextFragment::~EditorTextFragment() { qDeleteAll(m_subs); }
+
 const QString &EditorTextFragment::text() const { return m_text; }
 
 void EditorTextFragment::setText(QString &text) {
@@ -37,9 +39,10 @@ int EditorTextFragment::lineHeight() const {
   return fm.height();
 }
 
-QList<EditorFragmentSub> EditorTextFragment::subs() const { return m_subs; }
+const QList<EditorFragmentSub *> &EditorTextFragment::subs() const { return m_subs; }
 
-void EditorTextFragment::setSubs(QList<EditorFragmentSub> subs) {
+void EditorTextFragment::setSubs(QList<EditorFragmentSub *> subs) {
+  qDeleteAll(m_subs);
   m_subs = subs;
 }
 
@@ -50,12 +53,12 @@ void EditorTextFragment::paintEvent(QPaintEvent *event) {
 
   if (!m_subs.isEmpty()) {
     int lineH = lineHeight();
-    for (const auto &sub : m_subs) {
-      QString chunk = m_text.mid(sub.textOffsetStart,
-                                 sub.textOffsetEnd - sub.textOffsetStart);
+    for (const auto *sub : m_subs) {
+      QString chunk = m_text.mid(sub->textOffsetStart,
+                                 sub->textOffsetEnd - sub->textOffsetStart);
       painter.drawText(
-          QPoint(sub.pixelOffset.x(),
-                 sub.pixelOffset.y() + lineH - painter.fontMetrics().descent()),
+          QPoint(sub->rect.x(),
+                 sub->rect.y() + lineH - painter.fontMetrics().descent()),
           chunk);
     }
   } else {
