@@ -283,18 +283,13 @@ int EditorDocument::textCallback(MD_TEXTTYPE type, const MD_CHAR *text,
   }
 
   case MD_TEXT_CODE: {
-    bool inInlineCode = !qobject_cast<EditorCodeBlock *>(block);
+    bool inCodeBlock = qobject_cast<EditorCodeBlock *>(block);
 
     QTextCharFormat fmt = doc->m_formatStack.isEmpty()
                               ? QTextCharFormat()
                               : doc->m_formatStack.top();
 
-    auto *headingBlock = qobject_cast<EditorHeadingBlock *>(block);
-    if (headingBlock) {
-      fmt.setFont(headingBlock->headingFont());
-    }
-
-    if (inInlineCode) {
+    if (inCodeBlock) {
       QString str = QString::fromUtf8(text, size);
       QStringList lines = str.split('\n');
       for (int i = 0; i < lines.size(); ++i) {
