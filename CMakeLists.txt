@@ -27,10 +27,19 @@ add_executable(notes
     src/Editor.cpp
     src/EditorDocument.cpp
     src/EditorDocument/EditorElement.cpp
-    src/EditorDocument/EditorBlock.cpp
-    src/EditorDocument/EditorFragment.cpp
-    src/EditorDocument/EditorBrFragment.cpp
-    src/EditorDocument/EditorTextFragment.cpp
+    src/EditorDocument/EditorBlock/EditorBlock.cpp
+    src/EditorDocument/EditorBlock/EditorMultiLineBlock.cpp
+    src/EditorDocument/EditorBlock/EditorListItemBlock.cpp
+    src/EditorDocument/EditorBlock/EditorListBlock.cpp
+    src/EditorDocument/EditorBlock/EditorTableCellBlock.cpp
+    src/EditorDocument/EditorBlock/EditorTableBlock.cpp
+    src/EditorDocument/EditorBlock/EditorHrBlock.cpp
+    src/EditorDocument/EditorBlock/EditorHeadingBlock.cpp
+    src/EditorDocument/EditorBlock/EditorCodeBlock.cpp
+    src/EditorDocument/EditorBlock/EditorAdmonitionBlock.cpp
+    src/EditorDocument/EditorFragment/EditorFragment.cpp
+    src/EditorDocument/EditorFragment/EditorBrFragment.cpp
+    src/EditorDocument/EditorFragment/EditorTextFragment.cpp
     src/EditorDocument/EditorCursor.cpp
     src/EditorTabs.cpp
     src/DocumentManager.cpp
