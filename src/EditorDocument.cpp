@@ -12,7 +12,9 @@
 #include "notes/fragments/EditorBrFragment.h"
 #include "notes/fragments/EditorTextFragment.h"
 
+#include <QMouseEvent>
 #include <QResizeEvent>
+#include <algorithm>
 
 // Uncomment to enable md4c traversal debug output
 #define MD_TRACE_ENABLED
@@ -23,7 +25,12 @@
 #define MD_TRACE QNoDebug()
 #endif
 
-EditorDocument::EditorDocument(Editor *parent) : EditorBlock(parent) {}
+EditorDocument::EditorDocument(Editor *parent)
+    : EditorBlock(parent), m_cursor(new EditorCursor(this)) {}
+
+EditorDocument::~EditorDocument() { delete m_cursor; }
+
+EditorCursor *EditorDocument::cursor() const { return m_cursor; }
 
 //
 // Document State
@@ -398,6 +405,12 @@ QSize EditorDocument::sizeHint() const {
   return QSize(width(), totalHeight);
 }
 
+void EditorDocument::mousePressEvent(QMouseEvent *event) {
+  if (childAt(event->pos()) == nullptr && m_cursor)
+    m_cursor->clearSelection();
+  EditorBlock::mousePressEvent(event);
+}
+
 void EditorDocument::relayout() {
   int y = 0;
   int w = width();
@@ -411,4 +424,12 @@ void EditorDocument::relayout() {
     y += h;
   }
   setFixedHeight(y);
+
+  m_orderedElements = findChildren<EditorElement *>();
+  std::sort(m_orderedElements.begin(), m_orderedElements.end(),
+            [](EditorElement *a, EditorElement *b) {
+              if (a->y() != b->y())
+                return a->y() < b->y();
+              return a->x() < b->x();
+            });
 }

@@ -22,6 +22,11 @@ EditorBlock::EditorBlock(QWidget *parent)
 
 bool EditorBlock::isSelected() const { return m_selected; }
 
+void EditorBlock::setSelected(bool selected) {
+  m_selected = selected;
+  update();
+}
+
 void EditorBlock::setMargins(const QMargins &margins) { m_margins = margins; }
 
 QSize EditorBlock::sizeHint() const {

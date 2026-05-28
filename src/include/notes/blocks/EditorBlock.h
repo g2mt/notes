@@ -14,6 +14,7 @@ public:
 
   QSize sizeHint() const override;
   bool isSelected() const;
+  void setSelected(bool selected) override;
 
   virtual void relayout();
   virtual void setMargins(const QMargins &margins);

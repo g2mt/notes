@@ -9,21 +9,48 @@
 #include "notes/blocks/EditorBlock.h"
 
 class Editor;
+class QMouseEvent;
 
 class EditorCursor : public QObject {
   friend class EditorDocument;
   Q_OBJECT
 
-protected:
-  EditorElement *start;
-  EditorElement *end;
+public:
+  explicit EditorCursor(EditorDocument *doc);
+
+  void select(EditorElement *element);
+  void extendTo(EditorElement *element);
+  void clearSelection();
+
+  bool isSelected(EditorElement *element) const;
+  bool hasSelection() const;
+  bool isDragging() const;
+  void setDragging(bool dragging);
+
+signals:
+  void selectionChanged();
+
+private:
+  int indexOf(EditorElement *element) const;
+  void applySelection();
+
+  EditorDocument *m_document;
+  int m_selectionStart = -1;
+  int m_selectionEnd = -1;
+  int m_prevMin = -1;
+  int m_prevMax = -1;
+  bool m_dragging = false;
 };
 
 class EditorDocument : public EditorBlock {
+  friend class EditorCursor;
   Q_OBJECT
 
 public:
   explicit EditorDocument(Editor *parent = nullptr);
+  ~EditorDocument() override;
+
+  EditorCursor *cursor() const;
 
   bool isModified() const;
   void setModified(bool);
@@ -33,6 +60,9 @@ public:
 
 signals:
   void modificationChanged(bool);
+
+protected:
+  void mousePressEvent(QMouseEvent *event) override;
 
 private:
   void relayout() override;
@@ -46,6 +76,7 @@ private:
 
   bool m_modified = false;
   EditorCursor *m_cursor = nullptr;
+  QList<EditorElement *> m_orderedElements;
   QStack<EditorBlock *> m_blockStack;
   QStack<QTextCharFormat> m_formatStack;
 };

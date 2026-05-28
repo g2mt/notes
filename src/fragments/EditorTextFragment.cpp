@@ -29,6 +29,17 @@ int EditorTextFragment::selectionStart() const { return m_selectionStart; }
 
 int EditorTextFragment::selectionEnd() const { return m_selectionEnd; }
 
+void EditorTextFragment::setSelected(bool selected) {
+  if (selected) {
+    m_selectionStart = 0;
+    m_selectionEnd = m_text.length();
+  } else {
+    m_selectionStart = -1;
+    m_selectionEnd = -1;
+  }
+  update();
+}
+
 int EditorTextFragment::preferredWidth() const {
   QFontMetrics fm(m_charFormat.font());
   return fm.horizontalAdvance(m_text);

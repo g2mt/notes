@@ -6,6 +6,7 @@
 #include <QWidget>
 
 class EditorDocument;
+class QMouseEvent;
 
 class EditorElement : public QWidget {
   friend class EditorDocument;
@@ -17,8 +18,15 @@ public:
   EditorDocument *document() const;
   QString toMarkdown() const;
 
+  virtual void setSelected(bool selected);
+
+protected:
+  void mousePressEvent(QMouseEvent *event) override;
+  void mouseMoveEvent(QMouseEvent *event) override;
+  void mouseReleaseEvent(QMouseEvent *event) override;
+
 private:
-  EditorDocument *m_document;
+  bool m_dragging = false;
 };
 
 #endif // EDITOR_ELEMENT_H

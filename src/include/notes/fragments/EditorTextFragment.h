@@ -30,6 +30,8 @@ public:
   int selectionStart() const;
   int selectionEnd() const;
 
+  void setSelected(bool selected) override;
+
   int preferredWidth() const;
   int lineHeight() const;
 
