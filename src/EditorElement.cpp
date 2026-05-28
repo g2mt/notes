@@ -17,6 +17,18 @@ QString EditorElement::toMarkdown() const { return QString(); }
 
 void EditorElement::setSelected(bool selected) {}
 
+static EditorElement *leafAt(QWidget *widget, const QPoint &pos) {
+  auto *child = widget->childAt(pos);
+  if (!child)
+    return nullptr;
+  auto *elem = qobject_cast<EditorElement *>(child);
+  if (!elem)
+    return nullptr;
+  QPoint childPos = widget->mapTo(child, pos);
+  auto *leaf = leafAt(child, childPos);
+  return leaf ? leaf : elem;
+}
+
 void EditorElement::mousePressEvent(QMouseEvent *event) {
   QWidget::mousePressEvent(event);
 
@@ -40,7 +52,7 @@ void EditorElement::mouseMoveEvent(QMouseEvent *event) {
     return;
 
   QPoint docPos = mapTo(doc, event->pos());
-  auto *child = qobject_cast<EditorElement *>(doc->childAt(docPos));
+  auto *child = leafAt(doc, docPos);
   if (child) {
     qDebug() << "extendTo" << child;
     doc->cursor()->extendTo(child);

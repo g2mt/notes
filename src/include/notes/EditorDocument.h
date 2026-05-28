@@ -31,14 +31,12 @@ signals:
   void selectionChanged();
 
 private:
-  int indexOf(EditorElement *element) const;
   void applySelection();
+  QList<EditorElement *> leafElements() const;
 
   EditorDocument *m_document;
-  int m_selectionStart = -1;
-  int m_selectionEnd = -1;
-  int m_prevMin = -1;
-  int m_prevMax = -1;
+  QPoint m_selectionStart;
+  QPoint m_selectionEnd;
   bool m_dragging = false;
 };
 
@@ -76,7 +74,6 @@ private:
 
   bool m_modified = false;
   EditorCursor *m_cursor = nullptr;
-  QList<EditorElement *> m_orderedElements;
   QStack<EditorBlock *> m_blockStack;
   QStack<QTextCharFormat> m_formatStack;
 };

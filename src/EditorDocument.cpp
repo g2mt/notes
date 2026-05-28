@@ -14,7 +14,6 @@
 
 #include <QMouseEvent>
 #include <QResizeEvent>
-#include <algorithm>
 
 // Uncomment to enable md4c traversal debug output
 #define MD_TRACE_ENABLED
@@ -424,12 +423,4 @@ void EditorDocument::relayout() {
     y += h;
   }
   setFixedHeight(y);
-
-  m_orderedElements = findChildren<EditorElement *>();
-  std::sort(m_orderedElements.begin(), m_orderedElements.end(),
-            [](EditorElement *a, EditorElement *b) {
-              if (a->y() != b->y())
-                return a->y() < b->y();
-              return a->x() < b->x();
-            });
 }
