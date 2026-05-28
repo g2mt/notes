@@ -23,56 +23,6 @@
 #define MD_TRACE QNoDebug()
 #endif
 
-static const char *kBlockTypeNames[] = {
-    [MD_BLOCK_DOC] = "MD_BLOCK_DOC",
-    [MD_BLOCK_QUOTE] = "MD_BLOCK_QUOTE",
-    [MD_BLOCK_UL] = "MD_BLOCK_UL",
-    [MD_BLOCK_OL] = "MD_BLOCK_OL",
-    [MD_BLOCK_LI] = "MD_BLOCK_LI",
-    [MD_BLOCK_HR] = "MD_BLOCK_HR",
-    [MD_BLOCK_H] = "MD_BLOCK_H",
-    [MD_BLOCK_CODE] = "MD_BLOCK_CODE",
-    [MD_BLOCK_HTML] = "MD_BLOCK_HTML",
-    [MD_BLOCK_P] = "MD_BLOCK_P",
-    [MD_BLOCK_TABLE] = "MD_BLOCK_TABLE",
-    [MD_BLOCK_THEAD] = "MD_BLOCK_THEAD",
-    [MD_BLOCK_TBODY] = "MD_BLOCK_TBODY",
-    [MD_BLOCK_TR] = "MD_BLOCK_TR",
-    [MD_BLOCK_TH] = "MD_BLOCK_TH",
-    [MD_BLOCK_TD] = "MD_BLOCK_TD",
-    [MD_BLOCK_FOOTNOTE_DEF_SECTION] = "MD_BLOCK_FOOTNOTE_DEF_SECTION",
-    [MD_BLOCK_FOOTNOTE_DEF] = "MD_BLOCK_FOOTNOTE_DEF",
-    [MD_BLOCK_ADMONITION] = "MD_BLOCK_ADMONITION",
-};
-
-static const char *kSpanTypeNames[] = {
-    [MD_SPAN_EM] = "MD_SPAN_EM",
-    [MD_SPAN_STRONG] = "MD_SPAN_STRONG",
-    [MD_SPAN_A] = "MD_SPAN_A",
-    [MD_SPAN_IMG] = "MD_SPAN_IMG",
-    [MD_SPAN_CODE] = "MD_SPAN_CODE",
-    [MD_SPAN_DEL] = "MD_SPAN_DEL",
-    [MD_SPAN_LATEXMATH] = "MD_SPAN_LATEXMATH",
-    [MD_SPAN_LATEXMATH_DISPLAY] = "MD_SPAN_LATEXMATH_DISPLAY",
-    [MD_SPAN_WIKILINK] = "MD_SPAN_WIKILINK",
-    [MD_SPAN_U] = "MD_SPAN_U",
-    [MD_SPAN_SPOILER] = "MD_SPAN_SPOILER",
-    [MD_SPAN_SUPERSCRIPT] = "MD_SPAN_SUPERSCRIPT",
-    [MD_SPAN_SUBSCRIPT] = "MD_SPAN_SUBSCRIPT",
-    [MD_SPAN_FOOTNOTE_REF] = "MD_SPAN_FOOTNOTE_REF",
-};
-
-static const char *kTextTypeNames[] = {
-    [MD_TEXT_NORMAL] = "MD_TEXT_NORMAL",
-    [MD_TEXT_NULLCHAR] = "MD_TEXT_NULLCHAR",
-    [MD_TEXT_BR] = "MD_TEXT_BR",
-    [MD_TEXT_SOFTBR] = "MD_TEXT_SOFTBR",
-    [MD_TEXT_ENTITY] = "MD_TEXT_ENTITY",
-    [MD_TEXT_CODE] = "MD_TEXT_CODE",
-    [MD_TEXT_HTML] = "MD_TEXT_HTML",
-    [MD_TEXT_LATEXMATH] = "MD_TEXT_LATEXMATH",
-};
-
 EditorDocument::EditorDocument(Editor *parent) : EditorBlock(parent) {}
 
 //
@@ -342,6 +292,56 @@ int EditorDocument::textCallback(MD_TEXTTYPE type, const MD_CHAR *text,
 
   return 0;
 }
+
+static const char *kBlockTypeNames[] = {
+    [MD_BLOCK_DOC] = "MD_BLOCK_DOC",
+    [MD_BLOCK_QUOTE] = "MD_BLOCK_QUOTE",
+    [MD_BLOCK_UL] = "MD_BLOCK_UL",
+    [MD_BLOCK_OL] = "MD_BLOCK_OL",
+    [MD_BLOCK_LI] = "MD_BLOCK_LI",
+    [MD_BLOCK_HR] = "MD_BLOCK_HR",
+    [MD_BLOCK_H] = "MD_BLOCK_H",
+    [MD_BLOCK_CODE] = "MD_BLOCK_CODE",
+    [MD_BLOCK_HTML] = "MD_BLOCK_HTML",
+    [MD_BLOCK_P] = "MD_BLOCK_P",
+    [MD_BLOCK_TABLE] = "MD_BLOCK_TABLE",
+    [MD_BLOCK_THEAD] = "MD_BLOCK_THEAD",
+    [MD_BLOCK_TBODY] = "MD_BLOCK_TBODY",
+    [MD_BLOCK_TR] = "MD_BLOCK_TR",
+    [MD_BLOCK_TH] = "MD_BLOCK_TH",
+    [MD_BLOCK_TD] = "MD_BLOCK_TD",
+    [MD_BLOCK_FOOTNOTE_DEF_SECTION] = "MD_BLOCK_FOOTNOTE_DEF_SECTION",
+    [MD_BLOCK_FOOTNOTE_DEF] = "MD_BLOCK_FOOTNOTE_DEF",
+    [MD_BLOCK_ADMONITION] = "MD_BLOCK_ADMONITION",
+};
+
+static const char *kSpanTypeNames[] = {
+    [MD_SPAN_EM] = "MD_SPAN_EM",
+    [MD_SPAN_STRONG] = "MD_SPAN_STRONG",
+    [MD_SPAN_A] = "MD_SPAN_A",
+    [MD_SPAN_IMG] = "MD_SPAN_IMG",
+    [MD_SPAN_CODE] = "MD_SPAN_CODE",
+    [MD_SPAN_DEL] = "MD_SPAN_DEL",
+    [MD_SPAN_LATEXMATH] = "MD_SPAN_LATEXMATH",
+    [MD_SPAN_LATEXMATH_DISPLAY] = "MD_SPAN_LATEXMATH_DISPLAY",
+    [MD_SPAN_WIKILINK] = "MD_SPAN_WIKILINK",
+    [MD_SPAN_U] = "MD_SPAN_U",
+    [MD_SPAN_SPOILER] = "MD_SPAN_SPOILER",
+    [MD_SPAN_SUPERSCRIPT] = "MD_SPAN_SUPERSCRIPT",
+    [MD_SPAN_SUBSCRIPT] = "MD_SPAN_SUBSCRIPT",
+    [MD_SPAN_FOOTNOTE_REF] = "MD_SPAN_FOOTNOTE_REF",
+};
+
+static const char *kTextTypeNames[] = {
+    [MD_TEXT_NORMAL] = "MD_TEXT_NORMAL",
+    [MD_TEXT_NULLCHAR] = "MD_TEXT_NULLCHAR",
+    [MD_TEXT_BR] = "MD_TEXT_BR",
+    [MD_TEXT_SOFTBR] = "MD_TEXT_SOFTBR",
+    [MD_TEXT_ENTITY] = "MD_TEXT_ENTITY",
+    [MD_TEXT_CODE] = "MD_TEXT_CODE",
+    [MD_TEXT_HTML] = "MD_TEXT_HTML",
+    [MD_TEXT_LATEXMATH] = "MD_TEXT_LATEXMATH",
+};
 
 void EditorDocument::setMarkdown(const QString &markdown) {
   const auto &blocks = findChildren<EditorBlock *>();

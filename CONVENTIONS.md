@@ -9,9 +9,14 @@
   3. Getter/setter methods
   4. Event handlers (optional, prefer lambdas)
   5. Signals (in headers)
-- Store header files in `src/include/notes`
-- Wrap any operation with multiple insertion/deletion calls in `QTextCursor::beginEditBlock()` / `endEditBlock()` to keep undo steps atomic
-
+- Top level static definitions (functions and variables) need to be **directly before** the function they are used in.
+- For class implementations with many functions, separate each relevant section by comments. Comments MUST follow the format below. For instance:
+  ```cpp
+  //
+  // Markdown Parsing
+  //
+  ```
+- Store header files in `src/include/notes`.
 - When commiting, do not add anything to the message body. Instead, summarize what the commit does within only the commit title. Use the conventional commit format for the title: `type: description`.
 
 ## Libraries

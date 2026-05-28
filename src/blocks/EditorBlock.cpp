@@ -8,18 +8,16 @@
 #include <QResizeEvent>
 #include <qnamespace.h>
 
-static int nextWordBoundary(const QString &text, int offset) {
-  while (offset < text.length()) {
-    QChar ch = text[offset];
-    if (ch.isSpace() || ch.isPunct())
-      return offset;
-    offset++;
-  }
-  return text.length();
-}
+//
+// Constructor / Destructor
+//
 
 EditorBlock::EditorBlock(QWidget *parent)
     : EditorElement(parent), m_selected(false), m_margins(8, 4, 8, 4) {}
+
+//
+// Getters / Setters
+//
 
 bool EditorBlock::isSelected() const { return m_selected; }
 
@@ -36,15 +34,43 @@ const QList<EditorElement *> &EditorBlock::elements() const {
   return m_elements;
 }
 
+//
+// Event Handlers
+//
+
+void EditorBlock::resizeEvent(QResizeEvent *event) {
+  EditorElement::resizeEvent(event);
+  relayout();
+}
+
+void EditorBlock::paintEvent(QPaintEvent *event) {
+  QPainter painter(this);
+
+  if (m_selected) {
+    painter.fillRect(rect(), palette().highlight().color().lighter(180));
+  }
+
+  EditorElement::paintEvent(event);
+}
+
+//
+// Rendering
+//
+
 void EditorBlock::addElement(EditorElement *child) {
   child->setParent(this);
   m_elements.append(child);
   child->show();
 }
 
-void EditorBlock::resizeEvent(QResizeEvent *event) {
-  EditorElement::resizeEvent(event);
-  relayout();
+static int nextWordBoundary(const QString &text, int offset) {
+  while (offset < text.length()) {
+    QChar ch = text[offset];
+    if (ch.isSpace() || ch.isPunct())
+      return offset;
+    offset++;
+  }
+  return text.length();
 }
 
 void EditorBlock::relayout() {
@@ -170,14 +196,4 @@ void EditorBlock::relayout() {
 
   // Account for last line's height and bottom margin
   setFixedHeight(y + m_lineHeight + m_margins.bottom());
-}
-
-void EditorBlock::paintEvent(QPaintEvent *event) {
-  QPainter painter(this);
-
-  if (m_selected) {
-    painter.fillRect(rect(), palette().highlight().color().lighter(180));
-  }
-
-  EditorElement::paintEvent(event);
 }
