@@ -33,6 +33,7 @@ add_executable(notes
     src/blocks/EditorListBlock.cpp
     src/blocks/EditorTableCellBlock.cpp
     src/blocks/EditorTableBlock.cpp
+    src/blocks/EditorTableRowBlock.cpp
     src/blocks/EditorHrBlock.cpp
     src/blocks/EditorHeadingBlock.cpp
     src/blocks/EditorCodeBlock.cpp
@@ -62,6 +63,7 @@ add_executable(notes
     src/include/notes/blocks/EditorListItemBlock.h
     src/include/notes/blocks/EditorCodeBlock.h
     src/include/notes/blocks/EditorTableBlock.h
+    src/include/notes/blocks/EditorTableRowBlock.h
     src/include/notes/blocks/EditorHeadingBlock.h
     src/include/notes/blocks/EditorTableCellBlock.h
     src/include/notes/blocks/EditorHrBlock.h

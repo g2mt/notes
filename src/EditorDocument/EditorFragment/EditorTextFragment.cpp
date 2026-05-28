@@ -1,4 +1,4 @@
-#include "notes/EditorDocument.h"
+#include "notes/fragments/EditorTextFragment.h"
 
 #include <QFontMetrics>
 #include <QPaintEvent>

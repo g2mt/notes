@@ -5,4 +5,4 @@ EditorTableBlock::EditorTableBlock(int col, int row, QWidget *parent)
   setMargins(QMargins(0, 4, 0, 4));
 }
 
-void EditorTableBlock::relayout() { EditorBlock::relayout(); }
+int EditorTableBlock::colCount() const { return m_colCount; }

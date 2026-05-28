@@ -8,6 +8,7 @@
 #include "notes/blocks/EditorListItemBlock.h"
 #include "notes/blocks/EditorTableBlock.h"
 #include "notes/blocks/EditorTableCellBlock.h"
+#include "notes/blocks/EditorTableRowBlock.h"
 #include "notes/fragments/EditorBrFragment.h"
 #include "notes/fragments/EditorTextFragment.h"
 
@@ -162,18 +163,15 @@ int EditorDocument::enterBlock(MD_BLOCKTYPE type, void *detail,
   }
 
   case MD_BLOCK_THEAD:
-    block = new EditorBlock(doc);
-    block->setMargins(QMargins(0, 0, 0, 0));
+    block = new EditorTableRowBlock(doc);
     break;
 
   case MD_BLOCK_TBODY:
-    block = new EditorBlock(doc);
-    block->setMargins(QMargins(0, 0, 0, 0));
+    block = new EditorTableRowBlock(doc);
     break;
 
   case MD_BLOCK_TR:
-    block = new EditorBlock(doc);
-    block->setMargins(QMargins(0, 0, 0, 0));
+    block = new EditorTableRowBlock(doc);
     break;
 
   case MD_BLOCK_TH:

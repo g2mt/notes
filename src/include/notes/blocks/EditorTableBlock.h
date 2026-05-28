@@ -9,8 +9,9 @@ class EditorTableBlock : public EditorBlock {
 public:
   EditorTableBlock(int col, int row, QWidget *parent = nullptr);
 
-  void relayout() override;
   void addElement(EditorElement *child);
+
+  int colCount() const;
 
 private:
   int m_colCount;
