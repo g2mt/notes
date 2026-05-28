@@ -56,9 +56,15 @@ add_executable(notes
     src/include/notes/MainWindow.h
     src/include/notes/SideBar.h
     src/include/notes/TablePopup.h
+    src/include/notes/blocks/EditorAdmonitionBlock.h
+    src/include/notes/blocks/EditorListBlock.h
     src/include/notes/blocks/EditorBlock.h
-    src/include/notes/blocks/EditorHeadingBlock.h
+    src/include/notes/blocks/EditorListItemBlock.h
     src/include/notes/blocks/EditorCodeBlock.h
+    src/include/notes/blocks/EditorTableBlock.h
+    src/include/notes/blocks/EditorHeadingBlock.h
+    src/include/notes/blocks/EditorTableCellBlock.h
+    src/include/notes/blocks/EditorHrBlock.h
     src/include/notes/fragments/EditorFragment.h
     src/include/notes/fragments/EditorBrFragment.h
     src/include/notes/fragments/EditorTextFragment.h

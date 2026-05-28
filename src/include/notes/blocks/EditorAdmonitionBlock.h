@@ -4,6 +4,8 @@
 #include "notes/blocks/EditorBlock.h"
 
 class EditorAdmonitionBlock : public EditorBlock {
+  Q_OBJECT
+
 public:
   EditorAdmonitionBlock(const QString &type, QWidget *parent = nullptr);
 

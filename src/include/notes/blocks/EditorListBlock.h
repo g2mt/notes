@@ -4,6 +4,8 @@
 #include "notes/blocks/EditorBlock.h"
 
 class EditorListBlock : public EditorBlock {
+  Q_OBJECT
+
 public:
   enum Type { Unordered, Ordered };
 

@@ -4,6 +4,8 @@
 #include "notes/blocks/EditorBlock.h"
 
 class EditorTableCellBlock : public EditorBlock {
+  Q_OBJECT
+
 public:
   EditorTableCellBlock(bool isHeader, QWidget *parent = nullptr);
 

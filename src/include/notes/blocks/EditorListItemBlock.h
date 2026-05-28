@@ -4,6 +4,8 @@
 #include "notes/blocks/EditorBlock.h"
 
 class EditorListItemBlock : public EditorBlock {
+  Q_OBJECT
+
 public:
   EditorListItemBlock(QWidget *parent = nullptr);
 };

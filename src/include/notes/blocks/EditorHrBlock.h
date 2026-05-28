@@ -4,6 +4,8 @@
 #include "notes/blocks/EditorBlock.h"
 
 class EditorHrBlock : public EditorBlock {
+  Q_OBJECT
+
 public:
   EditorHrBlock(QWidget *parent = nullptr);
 
