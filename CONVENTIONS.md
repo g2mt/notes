@@ -19,11 +19,18 @@
 - Store header files in `src/include/notes`.
 - When commiting, do not add anything to the message body. Instead, summarize what the commit does within only the commit title. Use the conventional commit format for the title: `type: description`.
 
-## Libraries
-
-- Qt 6 is used for this program.
-
 ## UI
 
+- Qt 6 is used for UI
 - Menu actions, buttons have to be in title-case. Capitalize the first level of every content word.
+
+## Documents
+
+All AI-generated text (Markdown files, not code) must have the following preamble:
+
+```markdown
+> **Warning:** This file was generated with AI assistance.
+```
+
+Put all draft documents into `docs/draft`. Do NOT use them as reference unless explicitly allowed.
 
