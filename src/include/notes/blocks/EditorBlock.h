@@ -24,12 +24,11 @@ public:
   void addElement(EditorElement *child);
 
 protected:
-  // void resizeEvent(QResizeEvent *event) override;
+  void resizeEvent(QResizeEvent *event) override;
   void paintEvent(QPaintEvent *event) override;
 
   bool m_selected;
   QList<EditorElement *> m_elements;
-  QVBoxLayout *m_layout = nullptr;
 };
 
 #endif // EDITOR_BLOCK_H

@@ -8,16 +8,16 @@ void EditorCursor::applySelection() {
   if (!m_document)
     return;
 
-  int loX = std::min(m_selectionStart.x(), m_selectionEnd.x());
-  int loY = std::min(m_selectionStart.y(), m_selectionEnd.y());
-  int hiX = std::max(m_selectionStart.x(), m_selectionEnd.x());
-  int hiY = std::max(m_selectionStart.y(), m_selectionEnd.y());
+  int loX = qMin(m_selectionStart.x(), m_selectionEnd.x());
+  int loY = qMin(m_selectionStart.y(), m_selectionEnd.y());
+  int hiX = qMax(m_selectionStart.x(), m_selectionEnd.x());
+  int hiY = qMax(m_selectionStart.y(), m_selectionEnd.y());
 
   auto elements = m_document->findChildren<EditorElement *>();
   for (auto *elem : elements) {
     QPoint pos = elem->mapTo(m_document, QPoint(0, 0));
-    bool inside = pos.y() >= loY && pos.y() <= hiY &&
-                  pos.x() >= loX && pos.x() <= hiX;
+    bool inside =
+        pos.y() >= loY && pos.y() <= hiY && pos.x() >= loX && pos.x() <= hiX;
     elem->setSelected(inside);
   }
 }
@@ -61,12 +61,11 @@ bool EditorCursor::isSelected(EditorElement *element) const {
     return false;
 
   QPoint pos = element->mapTo(m_document, QPoint(0, 0));
-  int loX = std::min(m_selectionStart.x(), m_selectionEnd.x());
-  int loY = std::min(m_selectionStart.y(), m_selectionEnd.y());
-  int hiX = std::max(m_selectionStart.x(), m_selectionEnd.x());
-  int hiY = std::max(m_selectionStart.y(), m_selectionEnd.y());
-  return pos.y() >= loY && pos.y() <= hiY &&
-         pos.x() >= loX && pos.x() <= hiX;
+  int loX = qMin(m_selectionStart.x(), m_selectionEnd.x());
+  int loY = qMin(m_selectionStart.y(), m_selectionEnd.y());
+  int hiX = qMax(m_selectionStart.x(), m_selectionEnd.x());
+  int hiY = qMax(m_selectionStart.y(), m_selectionEnd.y());
+  return pos.y() >= loY && pos.y() <= hiY && pos.x() >= loX && pos.x() <= hiX;
 }
 
 bool EditorCursor::hasSelection() const { return !m_selectionStart.isNull(); }

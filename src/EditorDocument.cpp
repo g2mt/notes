@@ -25,9 +25,7 @@
 #endif
 
 EditorDocument::EditorDocument(Editor *parent)
-    : EditorBlock(parent), m_cursor(new EditorCursor(this)) {
-  setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-}
+    : EditorBlock(parent), m_cursor(new EditorCursor(this)) {}
 
 EditorDocument::~EditorDocument() { delete m_cursor; }
 

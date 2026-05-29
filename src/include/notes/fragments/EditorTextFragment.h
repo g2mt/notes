@@ -14,8 +14,6 @@ public:
   EditorTextFragmentSub(int textOffsetStart, int textOffsetEnd,
                         EditorTextFragment *tf, QWidget *parent = nullptr);
 
-  QSize sizeHint() const override;
-
 protected:
   void paintEvent(QPaintEvent *event) override;
 
@@ -23,7 +21,6 @@ private:
   int m_textOffsetStart;
   int m_textOffsetEnd;
   EditorTextFragment *m_tf;
-  QSize m_sizeHint;
 };
 
 class EditorTextFragment : public EditorFragment {
@@ -46,8 +43,6 @@ public:
 
   void setSelected(bool selected) override;
 
-  QSize sizeHint() const override;
-
 public slots:
   void setText(QString &);
 
@@ -57,7 +52,6 @@ protected:
 private:
   QString m_text;
   QTextCharFormat m_charFormat;
-  QSize m_sizeHint;
   int m_selectionStart = -1;
   int m_selectionEnd = -1;
 };

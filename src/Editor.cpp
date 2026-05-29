@@ -12,20 +12,14 @@
 Editor::Editor(QWidget *parent) : QScrollArea(parent) {
   m_document = new EditorDocument(this);
   setWidget(m_document);
-  setWidgetResizable(true);
+  setWidgetResizable(false);
 }
 
 Editor::~Editor() = default;
 
 EditorDocument *Editor::document() const { return m_document; }
 
-void Editor::setMarkdown(const QString &text) {
-  m_document->setMarkdown(text);
-  int innerWidth = viewport()->width();
-  m_document->setFixedWidth(innerWidth);
-  m_document->relayout();
-  m_previousWidth = innerWidth;
-}
+void Editor::setMarkdown(const QString &text) { m_document->setMarkdown(text); }
 
 //
 // File Saving / Loading

@@ -1,6 +1,7 @@
 #ifndef EDITOR_LINE_H
 #define EDITOR_LINE_H
 
+#include <QList>
 #include <QWidget>
 
 class QHBoxLayout;
@@ -14,9 +15,10 @@ public:
   bool isEmpty() const;
   void addWidget(QWidget *child);
   int preferredHeight() const;
+  void relayout();
 
 private:
-  QHBoxLayout *m_layout;
+  QList<QWidget *> m_children;
 };
 
 #endif // EDITOR_LINE_H

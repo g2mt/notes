@@ -16,13 +16,7 @@
 //
 
 EditorBlock::EditorBlock(QWidget *parent)
-    : EditorElement(parent), m_selected(false) {
-  setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
-  m_layout = new QVBoxLayout(this);
-  m_layout->setAlignment(Qt::AlignTop);
-  m_layout->setContentsMargins(0, 0, 0, 0);
-  m_layout->setSpacing(0);
-}
+    : EditorElement(parent), m_selected(false) {}
 
 //
 // Getters / Setters
@@ -44,6 +38,11 @@ const QList<EditorElement *> &EditorBlock::elements() const {
 //
 // Event Handlers
 //
+
+void EditorBlock::resizeEvent(QResizeEvent *event) {
+  QWidget::resizeEvent(event);
+  // relayout();
+}
 
 void EditorBlock::paintEvent(QPaintEvent *event) {
   QPainter painter(this);
@@ -80,10 +79,6 @@ void EditorBlock::relayout() {
   for (auto *line : lines) {
     delete line;
   }
-  QLayoutItem *item;
-  while ((item = m_layout->takeAt(0))) {
-    delete item;
-  }
 
   // Build new lines
   EditorLine *currentLine = nullptr;
@@ -92,14 +87,20 @@ void EditorBlock::relayout() {
   auto emptyLine = [&]() {
     if (currentLine == nullptr) {
       currentLine = new EditorLine(this);
+      assert(lineWidth == 0);
       return currentLine;
     }
     if (currentLine->isEmpty()) {
+      assert(lineWidth == 0);
       return currentLine;
     }
-    totalHeight += currentLine->preferredHeight();
-    m_layout->addWidget(currentLine);
+    currentLine->relayout();
+    currentLine->move(0, totalHeight);
+    currentLine->show();
+    totalHeight += currentLine->height();
+
     currentLine = new EditorLine(this);
+    currentLine->setFixedWidth(availableWidth);
     lineWidth = 0;
     return currentLine;
   };
@@ -107,22 +108,30 @@ void EditorBlock::relayout() {
   for (auto *child : m_elements) {
     if (qobject_cast<EditorBrFragment *>(child)) {
       emptyLine()->addWidget(child);
+      child->setVisible(true);
     } else if (auto *block = qobject_cast<EditorBlock *>(child)) {
       emptyLine()->addWidget(block);
+      block->setVisible(true);
+      block->setFixedWidth(availableWidth);
       block->relayout();
     } else if (auto *tf = qobject_cast<EditorTextFragment *>(child)) {
       // Fits entirely within one line
-      if (lineWidth + tf->sizeHint().width() < availableWidth) {
-        if (currentLine == nullptr) {
-          emptyLine();
+      int tfWidth = tf->width();
+      if (lineWidth + tfWidth < availableWidth) {
+        tf->setVisible(true);
+        if (currentLine != nullptr) {
+          currentLine->addWidget(child);
+          lineWidth += tfWidth;
+        } else {
+          emptyLine()->addWidget(child);
         }
-        currentLine->addWidget(tf);
-        lineWidth += tf->sizeHint().width();
         continue;
       }
 
       // Word wrapping is required
-      emptyLine();
+      tf->setVisible(false); // only subs are visible
+      if (currentLine == nullptr)
+        emptyLine();
       const QString &text = tf->text();
       QFontMetrics fm(tf->charFormat().font());
       int chunkStart = 0;
@@ -176,20 +185,24 @@ void EditorBlock::relayout() {
 
       tf->setSubs(subs);
     } else {
-      int fragW = child->sizeHint().width();
+      child->setVisible(true);
+      int fragW = child->width();
+      qDebug() << child << "width" << fragW;
 
-      if (lineWidth + fragW > availableWidth && lineWidth > 0) {
-        emptyLine()->addWidget(child);
-      } else {
+      if (lineWidth + fragW < availableWidth && currentLine != nullptr) {
         currentLine->addWidget(child);
         lineWidth += fragW;
+      } else {
+        emptyLine()->addWidget(child);
       }
     }
   }
 
   if (currentLine != nullptr) {
-    totalHeight += currentLine->preferredHeight();
-    m_layout->addWidget(currentLine);
+    currentLine->relayout();
+    currentLine->move(0, totalHeight);
+    currentLine->show();
+    totalHeight += currentLine->height();
   }
   setFixedHeight(totalHeight);
 }

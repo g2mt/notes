@@ -20,7 +20,7 @@ EditorTextFragmentSub::EditorTextFragmentSub(int textOffsetStart,
       m_tf->m_text.mid(m_textOffsetStart, m_textOffsetEnd - m_textOffsetStart);
   // qDebug() << chunk;
   QFontMetrics fm(m_tf->m_charFormat.font());
-  m_sizeHint = QSize(fm.horizontalAdvance(chunk), fm.height());
+  setFixedSize(QSize(fm.horizontalAdvance(chunk), fm.height()));
 }
 
 void EditorTextFragmentSub::paintEvent(QPaintEvent *event) {
@@ -30,11 +30,9 @@ void EditorTextFragmentSub::paintEvent(QPaintEvent *event) {
 
   QString chunk =
       m_tf->m_text.mid(m_textOffsetStart, m_textOffsetEnd - m_textOffsetStart);
-  int lineH = m_tf->m_sizeHint.height();
-  painter.drawText(QPoint(0, lineH - painter.fontMetrics().descent()), chunk);
+  painter.drawText(QPoint(0, height() - painter.fontMetrics().descent()),
+                   chunk);
 }
-
-QSize EditorTextFragmentSub::sizeHint() const { return m_sizeHint; }
 
 //
 // EditorTextFragment
@@ -52,8 +50,7 @@ const QString &EditorTextFragment::text() const { return m_text; }
 void EditorTextFragment::setText(QString &text) {
   m_text = text;
   QFontMetrics fm(m_charFormat.font());
-  m_sizeHint = QSize(fm.horizontalAdvance(m_text), fm.height());
-  updateGeometry();
+  setFixedSize(QSize(fm.horizontalAdvance(m_text), fm.height()));
   update();
 }
 
@@ -62,12 +59,9 @@ QTextCharFormat EditorTextFragment::charFormat() const { return m_charFormat; }
 void EditorTextFragment::setCharFormat(QTextCharFormat fmt) {
   m_charFormat = fmt;
   QFontMetrics fm(m_charFormat.font());
-  m_sizeHint = QSize(fm.horizontalAdvance(m_text), fm.height());
-  updateGeometry();
+  setFixedSize(QSize(fm.horizontalAdvance(m_text), fm.height()));
   update();
 }
-
-QSize EditorTextFragment::sizeHint() const { return m_sizeHint; }
 
 int EditorTextFragment::selectionStart() const { return m_selectionStart; }
 
