@@ -67,7 +67,6 @@ void EditorBlock::addElement(EditorElement *child) {
 
 void EditorBlock::relayout() {
   const int availableWidth = width();
-  qDebug() << availableWidth;
   int totalHeight = 0;
   setFixedHeight(0);
 
@@ -106,7 +105,6 @@ void EditorBlock::relayout() {
   };
 
   for (auto *child : m_elements) {
-    qDebug() << "el" << child;
     if (qobject_cast<EditorBrFragment *>(child)) {
       emptyLine()->addWidget(child);
     } else if (auto *block = qobject_cast<EditorBlock *>(child)) {
@@ -169,9 +167,7 @@ void EditorBlock::relayout() {
       if (chunkStart < text.length()) {
         auto *sub = new EditorTextFragmentSub(chunkStart, text.length(), tf);
         subs.append(sub);
-        currentLine->addWidget(sub);
-        lineWidth += fm.horizontalAdvance(
-            text.mid(chunkStart, text.length() - chunkStart));
+        emptyLine()->addWidget(sub);
       }
 
       tf->setSubs(subs);
@@ -188,7 +184,6 @@ void EditorBlock::relayout() {
   }
 
   if (currentLine != nullptr) {
-    qDebug() << "last:" << currentLine->preferredHeight();
     totalHeight += currentLine->preferredHeight();
     m_layout->addWidget(currentLine);
   }
