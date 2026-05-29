@@ -32,5 +32,6 @@ All AI-generated text (Markdown files, not code) must have the following preambl
 > **Warning:** This file was generated with AI assistance.
 ```
 
-Put all draft documents into `docs/draft`. Do NOT use them as reference unless explicitly allowed.
+Put all draft documents into `docs/draft`. The folder is already created.
+Do NOT use any existing documents as reference unless explicitly allowed.
 
