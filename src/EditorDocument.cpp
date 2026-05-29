@@ -25,7 +25,9 @@
 #endif
 
 EditorDocument::EditorDocument(Editor *parent)
-    : EditorBlock(parent), m_cursor(new EditorCursor(this)) {}
+    : EditorBlock(parent), m_cursor(new EditorCursor(this)) {
+  setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+}
 
 EditorDocument::~EditorDocument() { delete m_cursor; }
 
@@ -162,10 +164,6 @@ int EditorDocument::leaveBlock(MD_BLOCKTYPE type, void *detail,
   auto *doc = static_cast<EditorDocument *>(userdata);
   auto *block = doc->m_blockStack.top();
   doc->m_blockStack.pop();
-
-  if (type != MD_BLOCK_DOC && type != MD_BLOCK_HR)
-    static_cast<EditorBlock *>(block)->relayout();
-
   return 0;
 }
 
@@ -384,8 +382,6 @@ void EditorDocument::setMarkdown(const QString &markdown) {
 
   QByteArray utf8 = markdown.toUtf8();
   md_parse(utf8.constData(), utf8.size(), &parser, this);
-
-  relayout();
 }
 
 //

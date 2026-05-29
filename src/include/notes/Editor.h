@@ -33,6 +33,7 @@ public:
   void setFilePath(const QString &path);
 
 protected:
+  void resizeEvent(QResizeEvent *event) override;
   void focusInEvent(QFocusEvent *event) override;
 
 signals:
@@ -75,6 +76,7 @@ private:
   bool hasFileChangedExternally() const;
 
   EditorDocument *m_document;
+  int m_previousWidth = 0;
   QString m_filePath;
   QDateTime m_fileLastModified;
   qint64 m_fileSize = 0;

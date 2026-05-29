@@ -11,7 +11,9 @@ class EditorLine : public QWidget {
 public:
   explicit EditorLine(QWidget *parent = nullptr);
 
+  bool isEmpty() const;
   void addWidget(QWidget *child);
+  int preferredHeight() const;
 
 private:
   QHBoxLayout *m_layout;

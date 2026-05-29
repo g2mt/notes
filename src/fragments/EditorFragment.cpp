@@ -10,7 +10,4 @@ const QList<EditorFragmentSub *> &EditorFragment::subs() const {
   return m_subs;
 }
 
-void EditorFragment::setSubs(QList<EditorFragmentSub *> subs) {
-  qDeleteAll(m_subs);
-  m_subs = subs;
-}
+void EditorFragment::setSubs(QList<EditorFragmentSub *> subs) { m_subs = subs; }

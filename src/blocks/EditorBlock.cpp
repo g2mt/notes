@@ -17,7 +17,7 @@
 
 EditorBlock::EditorBlock(QWidget *parent)
     : EditorElement(parent), m_selected(false) {
-  setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+  setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
   m_layout = new QVBoxLayout(this);
   m_layout->setAlignment(Qt::AlignTop);
   m_layout->setContentsMargins(0, 0, 0, 0);
@@ -67,47 +67,60 @@ void EditorBlock::addElement(EditorElement *child) {
 
 void EditorBlock::relayout() {
   const int availableWidth = width();
+  qDebug() << availableWidth;
+  int totalHeight = 0;
+  setFixedHeight(0);
 
   // Detach "real" elements from previous lines
   for (auto *elem : m_elements) {
     elem->setParent(this);
   }
 
-  // Delete existing EditorLine widgets (and their sub children)
+  // Delete existing EditorLine widgets (and their sub-fragments)
   const auto lines = findChildren<EditorLine *>(Qt::FindDirectChildrenOnly);
   for (auto *line : lines) {
-    line->deleteLater();
+    delete line;
+  }
+  QLayoutItem *item;
+  while ((item = m_layout->takeAt(0))) {
+    delete item;
   }
 
   // Build new lines
   EditorLine *currentLine = nullptr;
   int lineWidth = 0;
 
-  auto flushLine = [&]() {
-    if (currentLine != nullptr) {
-      m_layout->addWidget(currentLine);
+  auto emptyLine = [&]() {
+    if (currentLine == nullptr) {
+      currentLine = new EditorLine(this);
+      return currentLine;
     }
+    if (currentLine->isEmpty()) {
+      return currentLine;
+    }
+    totalHeight += currentLine->preferredHeight();
+    m_layout->addWidget(currentLine);
     currentLine = new EditorLine(this);
     lineWidth = 0;
+    return currentLine;
   };
 
   for (auto *child : m_elements) {
+    qDebug() << "el" << child;
     if (qobject_cast<EditorBrFragment *>(child)) {
-      flushLine();
-      currentLine->addWidget(child);
+      emptyLine()->addWidget(child);
     } else if (auto *block = qobject_cast<EditorBlock *>(child)) {
-      flushLine();
-      currentLine->addWidget(block);
+      emptyLine()->addWidget(block);
+      block->relayout();
     } else if (auto *tf = qobject_cast<EditorTextFragment *>(child)) {
       // Fits entirely within one line
       if (tf->sizeHint().width() < availableWidth) {
-        flushLine();
-        currentLine->addWidget(tf);
+        emptyLine()->addWidget(tf);
         continue;
       }
 
       // Word wrapping is required
-      currentLine = currentLine == nullptr ? new EditorLine(this) : currentLine;
+      emptyLine();
       const QString &text = tf->text();
       QFontMetrics fm(tf->charFormat().font());
       int chunkStart = 0;
@@ -144,8 +157,7 @@ void EditorBlock::relayout() {
           // Split before the current word: sub from chunkStart to offset
           auto *sub = new EditorTextFragmentSub(chunkStart, offset, tf);
           subs.append(sub);
-          currentLine->addWidget(sub);
-          flushLine();
+          emptyLine()->addWidget(sub);
           chunkStart = offset;
           continue;
         }
@@ -166,13 +178,19 @@ void EditorBlock::relayout() {
     } else {
       int fragW = child->sizeHint().width();
 
-      if (lineWidth + fragW > availableWidth && lineWidth > 0)
-        flushLine();
-
-      currentLine->addWidget(child);
+      if (lineWidth + fragW > availableWidth && lineWidth > 0) {
+        emptyLine()->addWidget(child);
+      } else {
+        currentLine->addWidget(child);
+      }
       lineWidth += fragW;
     }
   }
 
-  flushLine();
+  if (currentLine != nullptr) {
+    qDebug() << "last:" << currentLine->preferredHeight();
+    totalHeight += currentLine->preferredHeight();
+    m_layout->addWidget(currentLine);
+  }
+  setFixedHeight(totalHeight);
 }

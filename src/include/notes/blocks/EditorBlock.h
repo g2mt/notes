@@ -24,6 +24,7 @@ public:
   void addElement(EditorElement *child);
 
 protected:
+  // void resizeEvent(QResizeEvent *event) override;
   void paintEvent(QPaintEvent *event) override;
 
   bool m_selected;

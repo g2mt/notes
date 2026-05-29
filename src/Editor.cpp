@@ -19,7 +19,13 @@ Editor::~Editor() = default;
 
 EditorDocument *Editor::document() const { return m_document; }
 
-void Editor::setMarkdown(const QString &text) { m_document->setMarkdown(text); }
+void Editor::setMarkdown(const QString &text) {
+  m_document->setMarkdown(text);
+  int innerWidth = viewport()->width();
+  m_document->setFixedWidth(innerWidth);
+  m_document->relayout();
+  m_previousWidth = innerWidth;
+}
 
 //
 // File Saving / Loading
@@ -167,6 +173,20 @@ void Editor::focusInEvent(QFocusEvent *event) {
       m_fileLastModified = fi.lastModified();
       m_fileSize = fi.size();
     }
+  }
+}
+
+//
+// Layout
+//
+
+void Editor::resizeEvent(QResizeEvent *event) {
+  QWidget::resizeEvent(event);
+  int innerWidth = viewport()->width();
+  if (innerWidth != m_previousWidth) {
+    m_document->setFixedWidth(innerWidth);
+    m_document->relayout();
+    m_previousWidth = innerWidth;
   }
 }
 
