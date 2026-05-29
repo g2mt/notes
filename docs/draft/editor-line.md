@@ -58,6 +58,8 @@ No `elements()`, no `removeElement()`, no `isEmpty()`. Just `addElement` for
 use during `relayout()`. The line owns its layout and children are
 parented into it via `addElement`.
 
+**Human Note:** `EditorFragmentSub` should be seen as a "virtual", not-real element.
+
 ### `EditorBlock` changes
 
 #### Layout strategy
@@ -90,8 +92,7 @@ the block height from its line children.
    `EditorFragmentSub`. This detaches non-sub-fragment elements that were placed in lines during the
    previous `relayout()`.
 2. **Delete all lines**: delete every `EditorLine` widget. This removes
-   them from `m_layout` and destroys their remaining children — the
-   `EditorTextFragmentSub` instances — via Qt parent-child.
+   them from `m_layout` and destroys their remaining children via Qt parent-child.
 3. **Compute new lines**: walk `m_elements`, determine line breaks, create
    `EditorLine` widgets and distribute children:
 
@@ -163,7 +164,7 @@ are kept. During `relayout()`:
 - The parent `EditorTextFragment` is hidden (`setVisible(false)`).
 - `EditorTextFragmentSub` instances are created, parented to their
   `EditorLine`, and distributed across lines.
-- Subs are **owned** by the parent block — their Qt parent is the
+- Subs are **owned** by the parent line — their Qt parent is the
   `EditorLine` they are placed in, which is destroyed on the next
   `relayout()`. The `EditorTextFragment` only **references** them via its
   `m_subs` list (stored as `EditorFragmentSub *`).
