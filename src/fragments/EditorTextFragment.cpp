@@ -16,8 +16,9 @@ EditorTextFragmentSub::EditorTextFragmentSub(int textOffsetStart,
     : EditorFragmentSub(parent), m_textOffsetStart(textOffsetStart),
       m_textOffsetEnd(textOffsetEnd), m_tf(tf) {
   setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-  QString chunk = m_tf->m_text.mid(m_textOffsetStart,
-                                    m_textOffsetEnd - m_textOffsetStart);
+  QString chunk =
+      m_tf->m_text.mid(m_textOffsetStart, m_textOffsetEnd - m_textOffsetStart);
+  // qDebug() << chunk;
   QFontMetrics fm(m_tf->m_charFormat.font());
   m_sizeHint = QSize(fm.horizontalAdvance(chunk), fm.height());
 }

@@ -20,6 +20,7 @@ EditorBlock::EditorBlock(QWidget *parent)
   setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
   m_layout = new QVBoxLayout(this);
   m_layout->setAlignment(Qt::AlignTop);
+  m_layout->setContentsMargins(0, 0, 0, 0);
   m_layout->setSpacing(0);
 }
 
@@ -44,11 +45,6 @@ const QList<EditorElement *> &EditorBlock::elements() const {
 // Event Handlers
 //
 
-void EditorBlock::resizeEvent(QResizeEvent *event) {
-  EditorElement::resizeEvent(event);
-  relayout();
-}
-
 void EditorBlock::paintEvent(QPaintEvent *event) {
   QPainter painter(this);
 
@@ -69,18 +65,8 @@ void EditorBlock::addElement(EditorElement *child) {
   child->show();
 }
 
-static int nextWordBoundary(const QString &text, int offset) {
-  while (offset < text.length()) {
-    QChar ch = text[offset];
-    if (ch.isSpace() || ch.isPunct())
-      return offset;
-    offset++;
-  }
-  return text.length();
-}
-
 void EditorBlock::relayout() {
-  int availableWidth = width();
+  const int availableWidth = width();
 
   // Detach "real" elements from previous lines
   for (auto *elem : m_elements) {
@@ -113,63 +99,70 @@ void EditorBlock::relayout() {
       flushLine();
       currentLine->addWidget(block);
     } else if (auto *tf = qobject_cast<EditorTextFragment *>(child)) {
-      currentLine = currentLine == nullptr ? new EditorLine(this) : currentLine;
+      // Fits entirely within one line
+      if (tf->sizeHint().width() < availableWidth) {
+        flushLine();
+        currentLine->addWidget(tf);
+        continue;
+      }
 
-      int fragLineH = tf->sizeHint().height();
+      // Word wrapping is required
+      currentLine = currentLine == nullptr ? new EditorLine(this) : currentLine;
       const QString &text = tf->text();
       QFontMetrics fm(tf->charFormat().font());
+      int chunkStart = 0;
+      int offset = 0;
+      QList<EditorFragmentSub *> subs;
 
-      int textOffset = 0;
-      int subStart = 0;
-      int subWidth = 0;
-
-      while (textOffset < text.length()) {
-        int boundary = nextWordBoundary(text, textOffset);
-
-        if (boundary == textOffset) {
-          QChar delim = text[textOffset];
-          int delimWidth = fm.horizontalAdvance(delim);
-
-          if (lineWidth + subWidth + delimWidth > availableWidth &&
-              lineWidth > 0) {
-            if (subWidth > 0) {
-              auto *sub = new EditorTextFragmentSub(subStart, textOffset, tf);
-              currentLine->addWidget(sub);
-            }
-            flushLine();
-            subStart = textOffset;
-            subWidth = 0;
-          }
-
-          subWidth += delimWidth;
-          textOffset++;
-        } else {
-          QString word = text.mid(textOffset, boundary - textOffset);
-          int wordWidth = fm.horizontalAdvance(word);
-
-          if (lineWidth + subWidth + wordWidth > availableWidth &&
-              lineWidth > 0) {
-            if (subWidth > 0) {
-              auto *sub = new EditorTextFragmentSub(subStart, textOffset, tf);
-              currentLine->addWidget(sub);
-            }
-            flushLine();
-            subStart = textOffset;
-            subWidth = 0;
-          }
-
-          subWidth += wordWidth;
-          textOffset = boundary;
+      while (offset < text.length()) {
+        // Find the next word boundary (space or punctuation)
+        int wordEnd = offset;
+        while (wordEnd < text.length()) {
+          QChar ch = text[wordEnd];
+          if (ch.isSpace() || ch.isPunct())
+            break;
+          wordEnd++;
         }
+
+        // Include following spaces and punctuation with the word
+        while (wordEnd < text.length() &&
+               (text[wordEnd].isSpace() || text[wordEnd].isPunct())) {
+          wordEnd++;
+        }
+
+        // Cumulative width from chunkStart to the current word boundary
+        int chunkWidth =
+            fm.horizontalAdvance(text.mid(chunkStart, wordEnd - chunkStart));
+
+        if (chunkWidth > availableWidth) {
+          // Even a single word overflows — let it break the line
+          if (offset == chunkStart) {
+            offset = wordEnd;
+            continue;
+          }
+
+          // Split before the current word: sub from chunkStart to offset
+          auto *sub = new EditorTextFragmentSub(chunkStart, offset, tf);
+          subs.append(sub);
+          currentLine->addWidget(sub);
+          flushLine();
+          chunkStart = offset;
+          continue;
+        }
+
+        offset = wordEnd;
       }
 
-      if (textOffset > subStart) {
-        auto *sub = new EditorTextFragmentSub(subStart, textOffset, tf);
+      // Create a sub for any remaining text on the final line
+      if (chunkStart < text.length()) {
+        auto *sub = new EditorTextFragmentSub(chunkStart, text.length(), tf);
+        subs.append(sub);
         currentLine->addWidget(sub);
-        lineWidth += subWidth;
+        lineWidth += fm.horizontalAdvance(
+            text.mid(chunkStart, text.length() - chunkStart));
       }
 
-      tf->hide();
+      tf->setSubs(subs);
     } else {
       int fragW = child->sizeHint().width();
 
