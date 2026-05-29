@@ -85,11 +85,14 @@ the block height from its line children.
 
 `relayout()` is now a destructive rebuild:
 
-1. **Clear existing lines**: iterate `m_layout` children, delete all
-   `EditorLine` widgets. This also removes them from the layout and
-   destroys their child widgets — including any `EditorTextFragmentSub`
-   instances currently placed in lines.
-2. **Compute new lines**: walk `m_elements`, determine line breaks, create
+1. **Reparent elements from `m_elements`**: iterate `m_elements` and call
+   `setParent(nullptr)` on each element that is NOT an
+   `EditorFragmentSub`. This detaches non-sub-fragment elements that were placed in lines during the
+   previous `relayout()`.
+2. **Delete all lines**: delete every `EditorLine` widget. This removes
+   them from `m_layout` and destroys their remaining children — the
+   `EditorTextFragmentSub` instances — via Qt parent-child.
+3. **Compute new lines**: walk `m_elements`, determine line breaks, create
    `EditorLine` widgets and distribute children:
 
    ```
@@ -119,7 +122,7 @@ the block height from its line children.
    `relayout()`). The `EditorTextFragment` references them via its
    `m_subs` list, which stores them as the base type `EditorFragmentSub *`.
 
-3. **Add each line to `m_layout`**.
+4. **Add each line to `m_layout`**.
 
 #### `m_elements` remains canonical
 
