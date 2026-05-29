@@ -3,7 +3,7 @@
 #include <QPainter>
 
 EditorCodeBlock::EditorCodeBlock(QWidget *parent) : EditorBlock(parent) {
-  m_margins = QMargins(8, 4, 8, 4);
+  setMargins(QMargins(8, 4, 8, 4));
 }
 
 void EditorCodeBlock::paintEvent(QPaintEvent *event) {

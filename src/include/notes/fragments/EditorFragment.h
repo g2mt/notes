@@ -10,6 +10,8 @@ class EditorFragmentSub : public QWidget {
 
 public:
   explicit EditorFragmentSub(QWidget *parent = nullptr);
+
+  QSize sizeHint() const override;
 };
 
 class EditorFragment : public EditorElement {

@@ -6,13 +6,14 @@
 
 #include "notes/EditorElement.h"
 
+class QVBoxLayout;
+
 class EditorBlock : public EditorElement {
   Q_OBJECT
 
 public:
   EditorBlock(QWidget *parent = nullptr);
 
-  QSize sizeHint() const override;
   bool isSelected() const;
   void setSelected(bool selected) override;
 
@@ -31,6 +32,7 @@ protected:
   bool m_selected;
   QMargins m_margins;
   QList<EditorElement *> m_elements;
+  QVBoxLayout *m_layout = nullptr;
 };
 
 #endif // EDITOR_BLOCK_H

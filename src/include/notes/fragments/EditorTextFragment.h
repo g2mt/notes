@@ -41,8 +41,7 @@ public:
 
   void setSelected(bool selected) override;
 
-  int preferredWidth() const;
-  int lineHeight() const;
+  QSize sizeHint() const override;
 
 public slots:
   void setText(QString &);
@@ -53,6 +52,7 @@ protected:
 private:
   QString m_text;
   QTextCharFormat m_charFormat;
+  QSize m_sizeHint;
   int m_selectionStart = -1;
   int m_selectionEnd = -1;
 };

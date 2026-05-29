@@ -4,7 +4,7 @@
 
 EditorTableCellBlock::EditorTableCellBlock(bool isHeader, QWidget *parent)
     : EditorBlock(parent), m_isHeader(isHeader) {
-  m_margins = QMargins(4, 4, 4, 4);
+  setMargins(QMargins(4, 4, 4, 4));
 }
 
 bool EditorTableCellBlock::isHeader() const { return m_isHeader; }

@@ -3,7 +3,7 @@
 #include <QPainter>
 
 EditorHrBlock::EditorHrBlock(QWidget *parent) : EditorBlock(parent) {
-  m_margins = QMargins(8, 8, 8, 8);
+  setMargins(QMargins(8, 8, 8, 8));
   setFixedHeight(18);
 }
 

@@ -2,6 +2,8 @@
 
 EditorFragmentSub::EditorFragmentSub(QWidget *parent) : QWidget(parent) {}
 
+QSize EditorFragmentSub::sizeHint() const { return size(); }
+
 EditorFragment::EditorFragment(QWidget *parent) : EditorElement(parent) {}
 
 const QList<EditorFragmentSub *> &EditorFragment::subs() const {

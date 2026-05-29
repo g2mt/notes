@@ -1,4 +1,5 @@
 #include "notes/blocks/EditorBlock.h"
+#include "notes/EditorLine.h"
 #include "notes/fragments/EditorBrFragment.h"
 #include "notes/fragments/EditorTextFragment.h"
 
@@ -6,6 +7,8 @@
 #include <QPaintEvent>
 #include <QPainter>
 #include <QResizeEvent>
+#include <QVBoxLayout>
+#include <qlabel.h>
 #include <qnamespace.h>
 
 //
@@ -13,7 +16,13 @@
 //
 
 EditorBlock::EditorBlock(QWidget *parent)
-    : EditorElement(parent), m_selected(false), m_margins(8, 4, 8, 4) {}
+    : EditorElement(parent), m_selected(false), m_margins(8, 4, 8, 4) {
+  setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+  m_layout = new QVBoxLayout(this);
+  m_layout->setAlignment(Qt::AlignTop);
+  m_layout->setContentsMargins(m_margins);
+  m_layout->setSpacing(0);
+}
 
 //
 // Getters / Setters
@@ -26,11 +35,9 @@ void EditorBlock::setSelected(bool selected) {
   update();
 }
 
-void EditorBlock::setMargins(const QMargins &margins) { m_margins = margins; }
-
-QSize EditorBlock::sizeHint() const {
-  int bottom = childrenRect().bottom() + m_margins.bottom();
-  return QSize(width(), bottom);
+void EditorBlock::setMargins(const QMargins &margins) {
+  m_margins = margins;
+  m_layout->setContentsMargins(margins);
 }
 
 bool EditorBlock::isEmpty() const { return m_elements.isEmpty(); }
@@ -79,154 +86,109 @@ static int nextWordBoundary(const QString &text, int offset) {
 }
 
 void EditorBlock::relayout() {
-  int x = m_margins.left();
-  int y = m_margins.top();
-  int lineHeight = 0;
   int availableWidth = width() - m_margins.left() - m_margins.right();
 
-  QList<QWidget *> pending;
+  // Detach "real" elements from previous lines
+  for (auto *elem : m_elements) {
+    elem->setParent(this);
+  }
+
+  // Delete existing EditorLine widgets (and their sub children)
+  const auto lines = findChildren<EditorLine *>(Qt::FindDirectChildrenOnly);
+  for (auto *line : lines) {
+    line->deleteLater();
+  }
+
+  // Build new lines
+  EditorLine *currentLine = nullptr;
+  int lineWidth = 0;
 
   auto flushLine = [&]() {
-    int maxH = 0;
-    for (auto *w : pending)
-      maxH = qMax(maxH, w->height());
-    for (auto *w : pending)
-      w->move(w->x(), y + maxH - w->height());
-    pending.clear();
-    x = m_margins.left();
-    y += lineHeight;
-    lineHeight = 0;
+    if (currentLine != nullptr) {
+      m_layout->addWidget(currentLine);
+    }
+    currentLine = new EditorLine(this);
+    lineWidth = 0;
   };
 
-  const auto &children = m_elements;
-
-  for (auto *child : children) {
-    // Nested blocks: flush any partial line, then lay out the block below
-    if (auto *block = qobject_cast<EditorBlock *>(child)) {
+  for (auto *child : m_elements) {
+    if (qobject_cast<EditorBrFragment *>(child)) {
       flushLine();
-
-      block->relayout();
-      int w = width() - m_margins.left() - m_margins.right();
-      if (w < 0)
-        w = 0;
-      int h = block->sizeHint().height();
-      block->setGeometry(m_margins.left(), y, w, h);
-
-      x = m_margins.left();
-      y += h;
-      lineHeight = 0;
-    }
-
-    // Line break fragment: force a new line
-    else if (qobject_cast<EditorBrFragment *>(child)) {
+      currentLine->addWidget(child);
+    } else if (auto *block = qobject_cast<EditorBlock *>(child)) {
       flushLine();
-    }
+      currentLine->addWidget(block);
+    } else if (auto *tf = qobject_cast<EditorTextFragment *>(child)) {
+      currentLine = currentLine == nullptr ? new EditorLine(this) : currentLine;
 
-    // Text fragments: render with word wrapping
-    else if (auto *tf = qobject_cast<EditorTextFragment *>(child)) {
-      int fragWidth = tf->preferredWidth();
-      int fragLineH = tf->lineHeight();
-
-      // Simple case: the entire text fragment fits on the current line
-      if (x + fragWidth <= availableWidth) {
-        tf->setGeometry(x, y, fragWidth, fragLineH);
-        tf->setSubs({});
-        pending.append(tf);
-        x += fragWidth;
-        lineHeight = qMax(lineHeight, fragLineH);
-        continue;
-      }
-
-      // Fragment doesn't fit: wrap at word boundaries
-      if (x > m_margins.left())
-        flushLine();
-
+      int fragLineH = tf->sizeHint().height();
       const QString &text = tf->text();
       QFontMetrics fm(tf->charFormat().font());
-      QList<EditorFragmentSub *> subs;
 
-      int widgetOriginX = x;
-      int widgetOriginY = y;
-      int maxX = x;
       int textOffset = 0;
-      int lineSubStart = 0;
-      int lineSubX = x;
+      int subStart = 0;
+      int subWidth = 0;
 
       while (textOffset < text.length()) {
         int boundary = nextWordBoundary(text, textOffset);
 
         if (boundary == textOffset) {
-          // Token is either a run of word chars, or a single delimiter about
-          // to be measured character by character
           QChar delim = text[textOffset];
           int delimWidth = fm.horizontalAdvance(delim);
 
-          if (x + delimWidth > availableWidth && x > m_margins.left()) {
-            auto *sub = new EditorTextFragmentSub(lineSubStart, textOffset, tf);
-            sub->setGeometry(lineSubX - widgetOriginX, y - widgetOriginY, 0,
-                             fragLineH);
-            subs.append(sub);
-            pending.append(sub);
+          if (lineWidth + subWidth + delimWidth > availableWidth &&
+              lineWidth > 0) {
+            if (subWidth > 0) {
+              auto *sub = new EditorTextFragmentSub(subStart, textOffset, tf);
+              sub->setFixedSize(subWidth, fragLineH);
+              currentLine->addWidget(sub);
+            }
             flushLine();
-            lineSubStart = textOffset;
-            lineSubX = x;
+            subStart = textOffset;
+            subWidth = 0;
           }
 
-          x += delimWidth;
+          subWidth += delimWidth;
           textOffset++;
         } else {
           QString word = text.mid(textOffset, boundary - textOffset);
           int wordWidth = fm.horizontalAdvance(word);
 
-          if (x + wordWidth > availableWidth && x > m_margins.left()) {
-            auto *sub = new EditorTextFragmentSub(lineSubStart, textOffset, tf);
-            sub->setGeometry(lineSubX - widgetOriginX, y - widgetOriginY, 0,
-                             fragLineH);
-            subs.append(sub);
-            pending.append(sub);
+          if (lineWidth + subWidth + wordWidth > availableWidth &&
+              lineWidth > 0) {
+            if (subWidth > 0) {
+              auto *sub = new EditorTextFragmentSub(subStart, textOffset, tf);
+              sub->setFixedSize(subWidth, fragLineH);
+              currentLine->addWidget(sub);
+            }
             flushLine();
-            lineSubStart = textOffset;
-            lineSubX = x;
+            subStart = textOffset;
+            subWidth = 0;
           }
 
-          x += wordWidth;
+          subWidth += wordWidth;
           textOffset = boundary;
         }
-
-        maxX = qMax(maxX, x);
-        lineHeight = qMax(lineHeight, fragLineH);
       }
 
-      auto *sub = new EditorTextFragmentSub(lineSubStart, textOffset, tf);
-      sub->setGeometry(lineSubX - widgetOriginX, y - widgetOriginY, 0,
-                       fragLineH);
-      subs.append(sub);
-      pending.append(sub);
+      if (textOffset > subStart) {
+        auto *sub = new EditorTextFragmentSub(subStart, textOffset, tf);
+        sub->setFixedSize(subWidth, fragLineH);
+        currentLine->addWidget(sub);
+        lineWidth += subWidth;
+      }
 
-      int widgetW = maxX - widgetOriginX;
-      int widgetH = (y - widgetOriginY) + fragLineH;
-      tf->setGeometry(widgetOriginX, widgetOriginY, widgetW, widgetH);
-      tf->setSubs(subs);
-    }
-
-    // Other inline fragments: display as inline with ongoing line,
-    // or in a new block if out of width
-    else {
+      tf->hide();
+    } else {
       int fragW = child->sizeHint().width();
-      int fragH = child->sizeHint().height();
 
-      if (x + fragW > availableWidth && x > m_margins.left())
+      if (lineWidth + fragW > availableWidth && lineWidth > 0)
         flushLine();
 
-      child->setGeometry(x, y, fragW, fragH);
-      pending.append(child);
-      x += fragW;
-      lineHeight = qMax(lineHeight, fragH);
+      currentLine->addWidget(child);
+      lineWidth += fragW;
     }
   }
 
   flushLine();
-
-  // Account for last line's height and bottom margin
-  setFixedHeight(y + m_margins.bottom());
 }

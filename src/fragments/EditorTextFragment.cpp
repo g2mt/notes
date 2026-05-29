@@ -3,6 +3,11 @@
 #include <QFontMetrics>
 #include <QPaintEvent>
 #include <QPainter>
+#include <QSize>
+
+//
+// EditorTextFragmentSub
+//
 
 EditorTextFragmentSub::EditorTextFragmentSub(int textOffsetStart,
                                              int textOffsetEnd,
@@ -20,12 +25,18 @@ void EditorTextFragmentSub::paintEvent(QPaintEvent *event) {
 
   QString chunk = fragment->m_text.mid(m_textOffsetStart,
                                        m_textOffsetEnd - m_textOffsetStart);
-  int lineH = fragment->lineHeight();
+  int lineH = fragment->m_sizeHint.height();
   painter.drawText(QPoint(0, lineH - painter.fontMetrics().descent()), chunk);
 }
 
+//
+// EditorTextFragment
+//
+
 EditorTextFragment::EditorTextFragment(QWidget *parent)
-    : EditorFragment(parent) {}
+    : EditorFragment(parent) {
+  setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+}
 
 EditorTextFragment::~EditorTextFragment() {}
 
@@ -33,6 +44,8 @@ const QString &EditorTextFragment::text() const { return m_text; }
 
 void EditorTextFragment::setText(QString &text) {
   m_text = text;
+  QFontMetrics fm(m_charFormat.font());
+  m_sizeHint = QSize(fm.horizontalAdvance(m_text), fm.height());
   updateGeometry();
   update();
 }
@@ -41,9 +54,13 @@ QTextCharFormat EditorTextFragment::charFormat() const { return m_charFormat; }
 
 void EditorTextFragment::setCharFormat(QTextCharFormat fmt) {
   m_charFormat = fmt;
+  QFontMetrics fm(m_charFormat.font());
+  m_sizeHint = QSize(fm.horizontalAdvance(m_text), fm.height());
   updateGeometry();
   update();
 }
+
+QSize EditorTextFragment::sizeHint() const { return m_sizeHint; }
 
 int EditorTextFragment::selectionStart() const { return m_selectionStart; }
 
@@ -58,16 +75,6 @@ void EditorTextFragment::setSelected(bool selected) {
     m_selectionEnd = -1;
   }
   update();
-}
-
-int EditorTextFragment::preferredWidth() const {
-  QFontMetrics fm(m_charFormat.font());
-  return fm.horizontalAdvance(m_text);
-}
-
-int EditorTextFragment::lineHeight() const {
-  QFontMetrics fm(m_charFormat.font());
-  return fm.height();
 }
 
 void EditorTextFragment::paintEvent(QPaintEvent *event) {

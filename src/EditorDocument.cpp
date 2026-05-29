@@ -394,33 +394,11 @@ void EditorDocument::setMarkdown(const QString &markdown) {
 }
 
 //
-// Layout
+// Events
 //
-
-QSize EditorDocument::sizeHint() const {
-  int totalHeight = 0;
-  for (auto *child : m_elements)
-    totalHeight += child->sizeHint().height();
-  return QSize(width(), totalHeight);
-}
 
 void EditorDocument::mousePressEvent(QMouseEvent *event) {
   if (childAt(event->pos()) == nullptr && m_cursor)
     m_cursor->clearSelection();
   EditorBlock::mousePressEvent(event);
-}
-
-void EditorDocument::relayout() {
-  int y = 0;
-  int w = width();
-  for (auto *child : m_elements) {
-    auto *block = qobject_cast<EditorBlock *>(child);
-    if (!block)
-      continue;
-    block->relayout();
-    int h = block->sizeHint().height();
-    block->setGeometry(0, y, w, h);
-    y += h;
-  }
-  setFixedHeight(y);
 }

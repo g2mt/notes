@@ -53,8 +53,6 @@ public:
   void setModified(bool);
   void setMarkdown(const QString &);
 
-  QSize sizeHint() const override;
-
 signals:
   void modificationChanged(bool);
 
@@ -62,8 +60,6 @@ protected:
   void mousePressEvent(QMouseEvent *event) override;
 
 private:
-  void relayout() override;
-
   static int enterBlock(MD_BLOCKTYPE type, void *detail, void *userdata);
   static int leaveBlock(MD_BLOCKTYPE type, void *detail, void *userdata);
   static int enterSpan(MD_SPANTYPE type, void *detail, void *userdata);

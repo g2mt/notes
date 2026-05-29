@@ -28,6 +28,7 @@ add_executable(notes
     src/EditorDocument.cpp
     src/EditorElement.cpp
     src/EditorCursor.cpp
+    src/EditorLine.cpp
     src/blocks/EditorBlock.cpp
     src/blocks/EditorListItemBlock.cpp
     src/blocks/EditorListBlock.cpp
@@ -52,6 +53,7 @@ add_executable(notes
     src/include/notes/Editor.h
     src/include/notes/EditorDocument.h
     src/include/notes/EditorElement.h
+    src/include/notes/EditorLine.h
     src/include/notes/EditorTabs.h
     src/include/notes/FileTree.h
     src/include/notes/MainWindow.h

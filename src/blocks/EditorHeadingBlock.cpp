@@ -5,7 +5,7 @@
 
 EditorHeadingBlock::EditorHeadingBlock(int level, QWidget *parent)
     : EditorBlock(parent), m_level(level) {
-  m_margins = QMargins(8, 8, 8, 4);
+  setMargins(QMargins(8, 8, 8, 4));
 }
 
 int EditorHeadingBlock::headingLevel() const { return m_level; }
