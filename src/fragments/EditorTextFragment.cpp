@@ -11,23 +11,29 @@
 
 EditorTextFragmentSub::EditorTextFragmentSub(int textOffsetStart,
                                              int textOffsetEnd,
-                                             EditorTextFragment *parent)
+                                             EditorTextFragment *tf,
+                                             QWidget *parent)
     : EditorFragmentSub(parent), m_textOffsetStart(textOffsetStart),
-      m_textOffsetEnd(textOffsetEnd) {}
+      m_textOffsetEnd(textOffsetEnd), m_tf(tf) {
+  setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+  QString chunk = m_tf->m_text.mid(m_textOffsetStart,
+                                    m_textOffsetEnd - m_textOffsetStart);
+  QFontMetrics fm(m_tf->m_charFormat.font());
+  m_sizeHint = QSize(fm.horizontalAdvance(chunk), fm.height());
+}
 
 void EditorTextFragmentSub::paintEvent(QPaintEvent *event) {
-  auto *fragment = qobject_cast<EditorTextFragment *>(parentWidget());
-  assert(fragment != nullptr);
-
   QPainter painter(this);
-  painter.setFont(fragment->m_charFormat.font());
-  painter.setPen(fragment->m_charFormat.foreground().color());
+  painter.setFont(m_tf->m_charFormat.font());
+  painter.setPen(m_tf->m_charFormat.foreground().color());
 
-  QString chunk = fragment->m_text.mid(m_textOffsetStart,
-                                       m_textOffsetEnd - m_textOffsetStart);
-  int lineH = fragment->m_sizeHint.height();
+  QString chunk =
+      m_tf->m_text.mid(m_textOffsetStart, m_textOffsetEnd - m_textOffsetStart);
+  int lineH = m_tf->m_sizeHint.height();
   painter.drawText(QPoint(0, lineH - painter.fontMetrics().descent()), chunk);
 }
+
+QSize EditorTextFragmentSub::sizeHint() const { return m_sizeHint; }
 
 //
 // EditorTextFragment

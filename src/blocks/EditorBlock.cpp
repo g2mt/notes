@@ -140,7 +140,6 @@ void EditorBlock::relayout() {
               lineWidth > 0) {
             if (subWidth > 0) {
               auto *sub = new EditorTextFragmentSub(subStart, textOffset, tf);
-              sub->setFixedSize(subWidth, fragLineH);
               currentLine->addWidget(sub);
             }
             flushLine();
@@ -158,7 +157,6 @@ void EditorBlock::relayout() {
               lineWidth > 0) {
             if (subWidth > 0) {
               auto *sub = new EditorTextFragmentSub(subStart, textOffset, tf);
-              sub->setFixedSize(subWidth, fragLineH);
               currentLine->addWidget(sub);
             }
             flushLine();
@@ -173,7 +171,6 @@ void EditorBlock::relayout() {
 
       if (textOffset > subStart) {
         auto *sub = new EditorTextFragmentSub(subStart, textOffset, tf);
-        sub->setFixedSize(subWidth, fragLineH);
         currentLine->addWidget(sub);
         lineWidth += subWidth;
       }

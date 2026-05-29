@@ -1,6 +1,7 @@
 #ifndef EDITOR_TEXT_FRAGMENT_H
 #define EDITOR_TEXT_FRAGMENT_H
 
+#include <QSize>
 #include <QTextCharFormat>
 
 #include "notes/fragments/EditorFragment.h"
@@ -11,7 +12,9 @@ class EditorTextFragmentSub : public EditorFragmentSub {
 
 public:
   EditorTextFragmentSub(int textOffsetStart, int textOffsetEnd,
-                        EditorTextFragment *parent);
+                        EditorTextFragment *tf, QWidget *parent = nullptr);
+
+  QSize sizeHint() const override;
 
 protected:
   void paintEvent(QPaintEvent *event) override;
@@ -19,6 +22,8 @@ protected:
 private:
   int m_textOffsetStart;
   int m_textOffsetEnd;
+  EditorTextFragment *m_tf;
+  QSize m_sizeHint;
 };
 
 class EditorTextFragment : public EditorFragment {
