@@ -64,7 +64,7 @@ void EditorBlock::addElement(EditorElement *child) {
   child->show();
 }
 
-void EditorBlock::relayout() {
+__attribute__((optimize("Ofast"))) void EditorBlock::relayout() {
   const int availableWidth = width();
   int totalHeight = 0;
   setFixedHeight(0);
@@ -77,61 +77,45 @@ void EditorBlock::relayout() {
   // Delete existing EditorLine widgets (and their sub-fragments)
   const auto lines = findChildren<EditorLine *>(Qt::FindDirectChildrenOnly);
   for (auto *line : lines) {
-    delete line;
+    line->deleteLater();
   }
 
   // Build new lines
-  EditorLine *currentLine = nullptr;
-  int lineWidth = 0;
+  EditorLine *currentLine = new EditorLine(this);
 
-  auto emptyLine = [&]() {
-    if (currentLine == nullptr) {
-      currentLine = new EditorLine(this);
-      assert(lineWidth == 0);
-      return currentLine;
-    }
-    if (currentLine->isEmpty()) {
-      assert(lineWidth == 0);
-      return currentLine;
-    }
-    currentLine->relayout();
+  auto newLine = [&](bool createLine = true) {
     currentLine->move(0, totalHeight);
     currentLine->show();
     totalHeight += currentLine->height();
-
-    currentLine = new EditorLine(this);
-    currentLine->setFixedWidth(availableWidth);
-    lineWidth = 0;
-    return currentLine;
+    if (createLine)
+      currentLine = new EditorLine(this);
   };
 
   for (auto *child : m_elements) {
     if (qobject_cast<EditorBrFragment *>(child)) {
-      emptyLine()->addWidget(child);
-      child->setVisible(true);
+      currentLine->addWidget(child);
+      newLine();
     } else if (auto *block = qobject_cast<EditorBlock *>(child)) {
-      emptyLine()->addWidget(block);
-      block->setVisible(true);
       block->setFixedWidth(availableWidth);
       block->relayout();
+      if (currentLine->isEmpty()) {
+        currentLine->addWidget(block);
+        newLine();
+      } else {
+        newLine();
+        currentLine->addWidget(block);
+      }
     } else if (auto *tf = qobject_cast<EditorTextFragment *>(child)) {
       // Fits entirely within one line
-      int tfWidth = tf->width();
-      if (lineWidth + tfWidth < availableWidth) {
+      if (currentLine->xPlacement() + tf->width() < availableWidth) {
         tf->setVisible(true);
-        if (currentLine != nullptr) {
-          currentLine->addWidget(child);
-          lineWidth += tfWidth;
-        } else {
-          emptyLine()->addWidget(child);
-        }
+        tf->setSubs({});
+        currentLine->addWidget(tf);
         continue;
       }
 
       // Word wrapping is required
       tf->setVisible(false); // only subs are visible
-      if (currentLine == nullptr)
-        emptyLine();
       const QString &text = tf->text();
       QFontMetrics fm(tf->charFormat().font());
       int chunkStart = 0;
@@ -158,17 +142,12 @@ void EditorBlock::relayout() {
         int chunkWidth =
             fm.horizontalAdvance(text.mid(chunkStart, wordEnd - chunkStart));
 
-        if (chunkWidth > availableWidth) {
-          // Even a single word overflows — let it break the line
-          if (offset == chunkStart) {
-            offset = wordEnd;
-            continue;
-          }
-
+        if (currentLine->xPlacement() + chunkWidth > availableWidth) {
           // Split before the current word: sub from chunkStart to offset
           auto *sub = new EditorTextFragmentSub(chunkStart, offset, tf);
           subs.append(sub);
-          emptyLine()->addWidget(sub);
+          currentLine->addWidget(sub);
+          newLine();
           chunkStart = offset;
           continue;
         }
@@ -180,29 +159,22 @@ void EditorBlock::relayout() {
       if (chunkStart < text.length()) {
         auto *sub = new EditorTextFragmentSub(chunkStart, text.length(), tf);
         subs.append(sub);
-        emptyLine()->addWidget(sub);
+        currentLine->addWidget(sub);
       }
 
       tf->setSubs(subs);
     } else {
-      child->setVisible(true);
       int fragW = child->width();
-      qDebug() << child << "width" << fragW;
 
-      if (lineWidth + fragW < availableWidth && currentLine != nullptr) {
+      if (currentLine->xPlacement() + fragW < availableWidth) {
         currentLine->addWidget(child);
-        lineWidth += fragW;
       } else {
-        emptyLine()->addWidget(child);
+        newLine();
+        currentLine->addWidget(child);
       }
     }
   }
 
-  if (currentLine != nullptr) {
-    currentLine->relayout();
-    currentLine->move(0, totalHeight);
-    currentLine->show();
-    totalHeight += currentLine->height();
-  }
+  newLine(false);
   setFixedHeight(totalHeight);
 }

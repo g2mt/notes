@@ -13,12 +13,12 @@ public:
   explicit EditorLine(QWidget *parent = nullptr);
 
   bool isEmpty() const;
+  int xPlacement() const;
   void addWidget(QWidget *child);
-  int preferredHeight() const;
-  void relayout();
 
 private:
   QList<QWidget *> m_children;
+  int m_xPlacement = 0;
 };
 
 #endif // EDITOR_LINE_H

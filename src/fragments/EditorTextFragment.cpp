@@ -79,9 +79,6 @@ void EditorTextFragment::setSelected(bool selected) {
 }
 
 void EditorTextFragment::paintEvent(QPaintEvent *event) {
-  if (!subs().isEmpty())
-    return;
-
   QPainter painter(this);
   painter.setFont(m_charFormat.font());
   painter.setPen(m_charFormat.foreground().color());
