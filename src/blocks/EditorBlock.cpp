@@ -39,11 +39,6 @@ const QList<EditorElement *> &EditorBlock::elements() const {
 // Event Handlers
 //
 
-void EditorBlock::resizeEvent(QResizeEvent *event) {
-  QWidget::resizeEvent(event);
-  // relayout();
-}
-
 void EditorBlock::paintEvent(QPaintEvent *event) {
   QPainter painter(this);
 
