@@ -86,10 +86,10 @@ the block height from its line children.
 `relayout()` is now a destructive rebuild:
 
 1. **Clear existing lines**: iterate `m_layout` children, delete all
-   `EditorLine` widgets. This also removes them from the layout.
-2. **Delete subs**: delete all `EditorFragmentSub` widgets owned by
-   `EditorTextFragment` instances in `m_elements`.
-3. **Compute new lines**: walk `m_elements`, determine line breaks, create
+   `EditorLine` widgets. This also removes them from the layout and
+   destroys their child widgets — including any `EditorTextFragmentSub`
+   instances currently placed in lines.
+2. **Compute new lines**: walk `m_elements`, determine line breaks, create
    `EditorLine` widgets and distribute children:
 
    ```
@@ -103,7 +103,7 @@ the block height from its line children.
      else if child is EditorTextFragment:
        measure text, word-wrap if needed
        for each wrapped piece:
-         create EditorFragmentSub, add to current line
+         create EditorTextFragmentSub, add to current line
          if line overflowed: finalize current line, start new line, add sub to new line
        hide the parent EditorTextFragment (setVisible(false))
      else:
@@ -112,10 +112,14 @@ the block height from its line children.
    ```
 
    The parent `EditorTextFragment` is hidden (not deleted) — its lifetime
-   is tied to `m_elements` on the `EditorBlock`. Only the subs are placed
-   into lines.
+   is tied to `m_elements` on the `EditorBlock`. Only the
+   `EditorTextFragmentSub` instances are placed into lines.
+   `EditorTextFragmentSub` widgets are owned by the parent block (their Qt
+   parent is the `EditorLine` they live in, which is destroyed on the next
+   `relayout()`). The `EditorTextFragment` references them via its
+   `m_subs` list, which stores them as the base type `EditorFragmentSub *`.
 
-4. **Add each line to `m_layout`**.
+3. **Add each line to `m_layout`**.
 
 #### `m_elements` remains canonical
 
@@ -147,14 +151,21 @@ The markdown callbacks (`enterBlock`, `textCallback`, etc.) still call
 `block->addElement(frag)` which appends to `m_elements`. No changes needed
 to the parsing pipeline.
 
-### `EditorFragmentSub` retained
+### `EditorFragmentSub` / `EditorTextFragmentSub` retained
 
-`EditorFragmentSub` (`src/include/notes/fragments/EditorTextFragment.h:9`)
-is kept. During `relayout()`:
+`EditorFragmentSub` (base class, `src/include/notes/fragments/EditorFragment.h:8`)
+and `EditorTextFragmentSub` (subclass, `src/include/notes/fragments/EditorTextFragment.h:9`)
+are kept. During `relayout()`:
+
 - The parent `EditorTextFragment` is hidden (`setVisible(false)`).
-- Its subs are created and distributed across lines.
-- The parent fragment stays parented to the block (not deleted), so its
-  lifetime matches the block's.
+- `EditorTextFragmentSub` instances are created, parented to their
+  `EditorLine`, and distributed across lines.
+- Subs are **owned** by the parent block — their Qt parent is the
+  `EditorLine` they are placed in, which is destroyed on the next
+  `relayout()`. The `EditorTextFragment` only **references** them via its
+  `m_subs` list (stored as `EditorFragmentSub *`).
+- The parent `EditorTextFragment` stays parented to the block (not
+  deleted), so its lifetime matches the block's.
 - When the fragment's text changes, a `relayout()` call regenerates subs.
 
 ### Selection (`EditorCursor`) — minimal impact
