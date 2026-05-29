@@ -63,23 +63,20 @@ int EditorDocument::enterBlock(MD_BLOCKTYPE type, void *detail,
   switch (type) {
   case MD_BLOCK_QUOTE:
     block = new EditorBlock(doc);
-    block->setMargins(QMargins(24, 4, 8, 4));
     break;
 
   case MD_BLOCK_UL: {
     auto *ulDetail = static_cast<MD_BLOCK_UL_DETAIL *>(detail);
     block = new EditorListBlock(EditorListBlock::Unordered, doc);
     if (ulDetail->is_tight)
-      block->setMargins(QMargins(16, 0, 8, 0));
-    break;
+      break;
   }
 
   case MD_BLOCK_OL: {
     auto *olDetail = static_cast<MD_BLOCK_OL_DETAIL *>(detail);
     block = new EditorListBlock(EditorListBlock::Ordered, doc);
     if (olDetail->is_tight)
-      block->setMargins(QMargins(16, 0, 8, 0));
-    break;
+      break;
   }
 
   case MD_BLOCK_LI:
@@ -140,12 +137,10 @@ int EditorDocument::enterBlock(MD_BLOCKTYPE type, void *detail,
 
   case MD_BLOCK_FOOTNOTE_DEF_SECTION:
     block = new EditorBlock(doc);
-    block->setMargins(QMargins(8, 12, 8, 4));
     break;
 
   case MD_BLOCK_FOOTNOTE_DEF:
     block = new EditorBlock(doc);
-    block->setMargins(QMargins(16, 2, 8, 2));
     break;
 
   case MD_BLOCK_ADMONITION: {

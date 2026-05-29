@@ -16,11 +16,10 @@
 //
 
 EditorBlock::EditorBlock(QWidget *parent)
-    : EditorElement(parent), m_selected(false), m_margins(8, 4, 8, 4) {
+    : EditorElement(parent), m_selected(false) {
   setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
   m_layout = new QVBoxLayout(this);
   m_layout->setAlignment(Qt::AlignTop);
-  m_layout->setContentsMargins(m_margins);
   m_layout->setSpacing(0);
 }
 
@@ -33,11 +32,6 @@ bool EditorBlock::isSelected() const { return m_selected; }
 void EditorBlock::setSelected(bool selected) {
   m_selected = selected;
   update();
-}
-
-void EditorBlock::setMargins(const QMargins &margins) {
-  m_margins = margins;
-  m_layout->setContentsMargins(margins);
 }
 
 bool EditorBlock::isEmpty() const { return m_elements.isEmpty(); }
@@ -86,7 +80,7 @@ static int nextWordBoundary(const QString &text, int offset) {
 }
 
 void EditorBlock::relayout() {
-  int availableWidth = width() - m_margins.left() - m_margins.right();
+  int availableWidth = width();
 
   // Detach "real" elements from previous lines
   for (auto *elem : m_elements) {

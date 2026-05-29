@@ -4,9 +4,7 @@
 
 EditorAdmonitionBlock::EditorAdmonitionBlock(const QString &type,
                                              QWidget *parent)
-    : EditorBlock(parent), m_type(type) {
-  setMargins(QMargins(16, 4, 8, 4));
-}
+    : EditorBlock(parent), m_type(type) {}
 
 QString EditorAdmonitionBlock::admonitionType() const { return m_type; }
 

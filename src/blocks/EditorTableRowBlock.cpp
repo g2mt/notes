@@ -3,9 +3,7 @@
 #include "notes/blocks/EditorTableCellBlock.h"
 
 EditorTableRowBlock::EditorTableRowBlock(QWidget *parent)
-    : EditorBlock(parent) {
-  setMargins(QMargins(0, 0, 0, 0));
-}
+    : EditorBlock(parent) {}
 
 EditorTableBlock *EditorTableRowBlock::table() const {
   const QWidget *w = this;
@@ -41,7 +39,7 @@ void EditorTableRowBlock::relayout() {
     return;
   }
 
-  int availableWidth = width() - m_margins.left() - m_margins.right();
+  int availableWidth = width();
   int cellWidth = availableWidth / colCount;
   int x = 0;
   int maxHeight = 0;

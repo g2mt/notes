@@ -3,9 +3,7 @@
 #include <QPainter>
 
 EditorTableCellBlock::EditorTableCellBlock(bool isHeader, QWidget *parent)
-    : EditorBlock(parent), m_isHeader(isHeader) {
-  setMargins(QMargins(4, 4, 4, 4));
-}
+    : EditorBlock(parent), m_isHeader(isHeader) {}
 
 bool EditorTableCellBlock::isHeader() const { return m_isHeader; }
 

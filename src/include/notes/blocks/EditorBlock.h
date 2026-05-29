@@ -2,7 +2,6 @@
 #define EDITOR_BLOCK_H
 
 #include <QList>
-#include <QMargins>
 
 #include "notes/EditorElement.h"
 
@@ -18,7 +17,6 @@ public:
   void setSelected(bool selected) override;
 
   virtual void relayout();
-  virtual void setMargins(const QMargins &margins);
 
   bool isEmpty() const;
 
@@ -30,7 +28,6 @@ protected:
   void paintEvent(QPaintEvent *event) override;
 
   bool m_selected;
-  QMargins m_margins;
   QList<EditorElement *> m_elements;
   QVBoxLayout *m_layout = nullptr;
 };

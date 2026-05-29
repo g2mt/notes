@@ -4,9 +4,7 @@
 #include <QPainter>
 
 EditorHeadingBlock::EditorHeadingBlock(int level, QWidget *parent)
-    : EditorBlock(parent), m_level(level) {
-  setMargins(QMargins(8, 8, 8, 4));
-}
+    : EditorBlock(parent), m_level(level) {}
 
 int EditorHeadingBlock::headingLevel() const { return m_level; }
 
