@@ -112,8 +112,12 @@ void EditorBlock::relayout() {
       block->relayout();
     } else if (auto *tf = qobject_cast<EditorTextFragment *>(child)) {
       // Fits entirely within one line
-      if (tf->sizeHint().width() < availableWidth) {
-        emptyLine()->addWidget(tf);
+      if (lineWidth + tf->sizeHint().width() < availableWidth) {
+        if (currentLine == nullptr) {
+          emptyLine();
+        }
+        currentLine->addWidget(tf);
+        lineWidth += tf->sizeHint().width();
         continue;
       }
 
@@ -178,8 +182,8 @@ void EditorBlock::relayout() {
         emptyLine()->addWidget(child);
       } else {
         currentLine->addWidget(child);
+        lineWidth += fragW;
       }
-      lineWidth += fragW;
     }
   }
 
