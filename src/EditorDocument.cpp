@@ -235,6 +235,7 @@ int EditorDocument::textCallback(MD_TEXTTYPE type, const MD_CHAR *text,
     QTextCharFormat fmt = doc->m_formatStack.isEmpty()
                               ? QTextCharFormat()
                               : doc->m_formatStack.top();
+    fmt.setFontFamilies({"monospace"});
 
     if (inCodeBlock) {
       QString str = QString::fromUtf8(text, size);
@@ -254,7 +255,6 @@ int EditorDocument::textCallback(MD_TEXTTYPE type, const MD_CHAR *text,
       QString str = QString::fromUtf8(text, size);
       str = str.replace("\n", "");
       frag->setText(str);
-      fmt.setFontFamilies({"monospace"});
       frag->setCharFormat(fmt);
       block->addElement(frag);
     }
