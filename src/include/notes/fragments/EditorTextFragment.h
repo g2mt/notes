@@ -35,6 +35,8 @@ public:
 
   const QString &text() const;
 
+  QFontMetrics fontMetrics() const;
+
   QTextCharFormat charFormat() const;
   void setCharFormat(QTextCharFormat);
 
