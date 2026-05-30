@@ -13,9 +13,6 @@ class EditorBlock : public EditorElement {
 public:
   EditorBlock(QWidget *parent = nullptr);
 
-  bool isSelected() const;
-  void setSelected(bool selected) override;
-
   virtual void relayout();
 
   bool isEmpty() const;

@@ -4,69 +4,15 @@
 
 EditorCursor::EditorCursor(EditorDocument *doc) : m_document(doc) {}
 
-void EditorCursor::applySelection() {
-  if (!m_document)
-    return;
+void EditorCursor::applySelection() {}
 
-  int loX = qMin(m_selectionStart.x(), m_selectionEnd.x());
-  int loY = qMin(m_selectionStart.y(), m_selectionEnd.y());
-  int hiX = qMax(m_selectionStart.x(), m_selectionEnd.x());
-  int hiY = qMax(m_selectionStart.y(), m_selectionEnd.y());
+void EditorCursor::select(EditorElement *element) {}
 
-  auto elements = m_document->findChildren<EditorElement *>();
-  for (auto *elem : elements) {
-    QPoint pos = elem->mapTo(m_document, QPoint(0, 0));
-    bool inside =
-        pos.y() >= loY && pos.y() <= hiY && pos.x() >= loX && pos.x() <= hiX;
-    elem->setSelected(inside);
-  }
-}
+void EditorCursor::extendTo(EditorElement *element) {}
 
-void EditorCursor::select(EditorElement *element) {
-  clearSelection();
+void EditorCursor::clearSelection() {}
 
-  if (!element || !m_document)
-    return;
-
-  m_selectionStart = element->mapTo(m_document, QPoint(0, 0));
-  m_selectionEnd = m_selectionStart;
-  applySelection();
-  emit selectionChanged();
-}
-
-void EditorCursor::extendTo(EditorElement *element) {
-  if (!element || !m_document)
-    return;
-
-  m_selectionEnd = element->mapTo(m_document, QPoint(0, 0));
-  applySelection();
-  emit selectionChanged();
-}
-
-void EditorCursor::clearSelection() {
-  if (!m_document)
-    return;
-
-  auto elements = m_document->findChildren<EditorElement *>();
-  for (auto *elem : elements)
-    elem->setSelected(false);
-
-  m_selectionStart = QPoint();
-  m_selectionEnd = QPoint();
-  emit selectionChanged();
-}
-
-bool EditorCursor::isSelected(EditorElement *element) const {
-  if (!element || !m_document || m_selectionStart.isNull())
-    return false;
-
-  QPoint pos = element->mapTo(m_document, QPoint(0, 0));
-  int loX = qMin(m_selectionStart.x(), m_selectionEnd.x());
-  int loY = qMin(m_selectionStart.y(), m_selectionEnd.y());
-  int hiX = qMax(m_selectionStart.x(), m_selectionEnd.x());
-  int hiY = qMax(m_selectionStart.y(), m_selectionEnd.y());
-  return pos.y() >= loY && pos.y() <= hiY && pos.x() >= loX && pos.x() <= hiX;
-}
+bool EditorCursor::isSelected(EditorElement *element) const {}
 
 bool EditorCursor::hasSelection() const { return !m_selectionStart.isNull(); }
 

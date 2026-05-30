@@ -41,8 +41,6 @@ public:
   int selectionStart() const;
   int selectionEnd() const;
 
-  void setSelected(bool selected) override;
-
 public slots:
   void setText(QString &);
 

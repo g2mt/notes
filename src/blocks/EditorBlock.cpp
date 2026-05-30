@@ -22,13 +22,6 @@ EditorBlock::EditorBlock(QWidget *parent)
 // Getters / Setters
 //
 
-bool EditorBlock::isSelected() const { return m_selected; }
-
-void EditorBlock::setSelected(bool selected) {
-  m_selected = selected;
-  update();
-}
-
 bool EditorBlock::isEmpty() const { return m_elements.isEmpty(); }
 
 const QList<EditorElement *> &EditorBlock::elements() const {
